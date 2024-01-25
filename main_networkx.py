@@ -66,7 +66,6 @@ print(f"All paths starting from node {start_node}: {all_paths}")
 
 print(f"successor of {start_node}: {list(G.successors(start_node))}")
 
-qwee
 def execute_graph(G):
     # Perform a topological sort to determine the execution order
     execution_order = list(nx.topological_sort(G))

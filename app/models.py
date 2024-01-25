@@ -9,7 +9,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
 
-from app.database import Base
+# from app.database import Base
 
 
 class Users(Base):
