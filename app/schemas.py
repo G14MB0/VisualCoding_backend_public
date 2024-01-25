@@ -16,6 +16,46 @@ class Node(BaseModel):
     data: dict
     position: dict
 
+        
+
+class AddNode(BaseModel):
+    type: str
+    data: dict
+    name: str
+    category: str
+
+    # Serialize data when dumping to JSON
+    class Config:
+        json_encoders = {
+            dict: lambda v: json.dumps(v)
+        }
+
+
+
+        
+class GetNode(BaseModel):
+    type: str
+    data: dict
+    name: str
+    category: str
+
+    # Serialize data when dumping to JSON
+    class Config:
+        json_encoders = {
+            dict: lambda v: json.dumps(v)
+        }
+
+    # Deserialize data when loading from JSON
+    @validator('data', pre=True)
+    def parse_json(cls, v):
+        try:
+            return json.loads(v)
+        except ValueError:
+            return v
+
+class DeleteNode(BaseModel):
+    name: str
+
 # Define a model for the edge structure
 class Edge(BaseModel):
     source: str
@@ -33,3 +73,5 @@ class FunctionNode(BaseModel):
     data: dict
 
 
+class Save(BaseModel):
+    filePath: str = ""

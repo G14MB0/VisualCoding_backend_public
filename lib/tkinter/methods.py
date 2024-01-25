@@ -43,3 +43,14 @@ def tk_selectFolder() -> str:
         return folder
     except:
         return ""
+    
+
+def tk_save_as():
+    # Define the file types the dialog should allow (e.g., text files)
+    file_types = [('r2f', '*.r2f'), ('All Files', '*.*')]
+    # Open the "Save As" dialog and ask for the file name and location to save
+    root = Tk()
+    root.withdraw()   
+    root.wm_attributes('-topmost',1)
+    file_path = filedialog.asksaveasfilename(defaultextension=".r2f", filetypes=file_types)
+    return file_path

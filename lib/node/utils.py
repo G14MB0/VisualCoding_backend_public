@@ -77,7 +77,8 @@ loop = asyncio.get_event_loop()
 def runGraph():
     # Ensure all nodes are set to run
     for node in G.nodes:
-        G.nodes[node]['obj'].run = True
+        if 'obj' in G.nodes[node]:
+            G.nodes[node]['obj'].run = True
     # Schedule the start_graph_execution coroutine without using asyncio.run
     if not loop.is_running():
         loop.run_until_complete(N.start_graph_execution(G))

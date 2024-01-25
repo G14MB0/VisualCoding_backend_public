@@ -7,11 +7,16 @@ be extended in the models.py to create our table models
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import os
 
+# Ottieni il percorso assoluto della directory dello script corrente
+dir_path = os.path.dirname(os.path.abspath(__file__))
+# Costruisci il percorso del database relativamente a quella directory
+db_path = os.path.join(dir_path, 'R2F.db')
 
-SQLACLHEMY_DATABASE_URL = 'postgresql://postgres:Ginopino96@127.0.0.1/simpleApp_Backend'
+SQLALCHEMY_DATABASE_URL = f'sqlite:///{db_path}'
 
-engine = create_engine(SQLACLHEMY_DATABASE_URL)
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

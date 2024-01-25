@@ -25,10 +25,10 @@ uvicorn app.main:app --reload #start the server without the main.py file
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import nodes
+from app.routers import nodes, funcitons
 
-# from app import models
-# from app.database import engine
+from app import models
+from app.database import engine
 
 from contextlib import asynccontextmanager
 
@@ -85,7 +85,7 @@ async def lifespan(app: FastAPI):
     """this lifespan metohod, used with the @asynccontextmanager decorator
     is the new way to deal with event in fastapi since the classical app.on("event") is deprecated
     """    
-
+    models.Base.metadata.create_all(bind=engine) 
     # Code here runs after the app startup
     print("---------------------------------------------------------------")
     print("The app has started and this is the lifespan method telling you")
@@ -127,9 +127,8 @@ app.add_middleware(
 )
 
 
-# app.include_router(user.router)
-# app.include_router(auth.router)
 app.include_router(nodes.router)
+app.include_router(funcitons.router)
 
 
 @app.get("/")
