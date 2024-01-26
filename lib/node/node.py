@@ -4,6 +4,7 @@ import asyncio
 from asyncio.exceptions import CancelledError
 import re
 import traceback
+import functools
 
 from lib import global_var as gv
 
@@ -57,7 +58,7 @@ class DebugNode(Node):
 
         # Returns of the funciton
 
-    async def execute(self, graph, data=None):
+    async def execute(self, graph, data=None, caller=None):
         await gv.setRunningNode(self.id, data)
         await asyncio.sleep(0.5)
         await gv.setStoppingNode(self.id, data)
@@ -76,7 +77,7 @@ class FunctionNode(Node):
         self.code = code
         
 
-    async def execute(self, graph, data=None):
+    async def execute(self, graph, data=None, caller=None):
         if self.run:
             await gv.setRunningNode(self.id)
             try:
@@ -128,7 +129,7 @@ class ComparatorNode(Node):
         self.code = code
 
 
-    async def execute(self, graph, data=None):
+    async def execute(self, graph, data=None, caller=None):
         if self.run:
             await gv.setRunningNode(self.id)
             try:
@@ -174,28 +175,50 @@ class ComparatorNode(Node):
 
 
 
-class TriggerNode(Node):
-    def __init__(self, id, trigger_condition_func, polling):
-        super().__init__(id, "trigger")
-        self.trigger_condition_func = trigger_condition_func
-        self.polling = polling
-        self.triggered = False  # This flag will indicate whether the trigger condition has been met
-
-    def check_trigger(self):
-        """Check the trigger condition in a loop."""
-        while not self.triggered:
-            self.triggered = self.trigger_condition_func()
-            if not self.triggered:
-                time.sleep(self.polling)
-
-
-    def execute(self, graph, data):
-        trigger_thread = threading.Thread(target=self.check_trigger)
-        trigger_thread.start()
-        trigger_thread.join()  # Wait for the trigger condition to be met
-        return self.triggered
+class MuxerNode(Node):
+    def __init__(self, id, operation):
+        super().__init__(id, "muxer")
+        self.operation = operation
+        self.toOperate = []
     
 
+    async def operate(self):
+        if self.operation == "sum":
+            self.output = sum(self.toOperate)
+        
+        if self.operation == "multiply":
+            self.output = functools.reduce(lambda a, b: a*b, self.toOperate)
+        
+        return
+
+
+    async def execute(self, graph, data=None, caller=None):
+        await gv.setRunningNode(self.id)
+        # Check if caller has been passed
+        if caller == None:
+            self.output = "ERROR"
+
+        # Check if the caller_data g_var exist, if not, set it with value
+        l_variable = f"{caller}_data"
+        if not hasattr(gv, l_variable):
+            setattr(gv, l_variable, data)
+
+        # Now check if all the predecessors g_var has been initialized, so make the operation, otherwise pass
+        for predecessor in list(graph.predecessors(self.id)):
+            if not hasattr(gv, f"{predecessor}_data"):
+                self.output = None
+                return
+            else:
+                self.toOperate.append(getattr(gv, f"{predecessor}_data"))
+        
+        await self.operate()
+        await gv.setStoppingNode(self.id)
+        # Procedi con l'esecuzione dei nodi successori sequenzialmente
+        successors = list(graph.successors(self.id))
+        await gv.setStoppingNode(self.id)
+        for successor in successors:
+            await execute_successors(graph, successor, data=self.output)  
+            
 
 class TimerNode(Node):
     def __init__(self, id, value, mu, loop=False):
@@ -219,7 +242,7 @@ class TimerNode(Node):
             self.run = False
 
 
-    async def execute(self, graph, data):
+    async def execute(self, graph, data=None, caller=None):
         counter = 0
         while self.run:
             await gv.setRunningNode(self.id)

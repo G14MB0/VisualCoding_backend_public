@@ -23,7 +23,7 @@ dist/
 *.egg-info/
 
 # Log files
-*.log
+*.log*.db
 
 # Other files that should not be version-controlled
 *.csv

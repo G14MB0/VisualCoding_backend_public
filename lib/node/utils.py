@@ -35,6 +35,10 @@ def updateNodesAndEdges(data):
             print("Add Debug Node")
             temp  = N.DebugNode(node['id'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'MuxerNode':
+            print("Add Muxer Node")
+            temp  = N.MuxerNode(node['id'], node['data']['operation'])
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
 
