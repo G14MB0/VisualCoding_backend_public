@@ -18,6 +18,7 @@ class Nodes(Base):
     id = Column(Integer, primary_key=True, nullable=False) # nullable=False means that is not Null
     name = Column(String, nullable=False, unique=True)
     type = Column(String, nullable=False)
+    style = Column(String, nullable=False)
     category = Column(String, nullable=True)
     data = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('CURRENT_TIMESTAMP'))  #this text will put in pgadmin the text inside (now()) so in this case to create the now() default value

@@ -22,17 +22,21 @@ def updateNodesAndEdges(data):
                 temp = N.TimerNode(node['id'], node["data"]['timerInterval'], node["data"]['selected'], node["data"]['loop'])
             else:
                 temp = N.TimerNode(node['id'], node["data"]['timerInterval'], node["data"]['selected'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], obj=temp)
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         elif node["type"] == 'FunctionNode' and 'code' in node["data"]:
             print("Add Function Node")
             temp = N.FunctionNode(node['id'], node["data"]['code'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], obj=temp)
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         elif node["type"] == 'ComparatorNode' and 'code' in node["data"]:
             print("Add Comparator Node")
             temp = N.ComparatorNode(node['id'], node["data"]['code'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], obj=temp)
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'DebugNode':
+            print("Add Debug Node")
+            temp  = N.DebugNode(node['id'])
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'])
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
 
 
 
@@ -56,7 +60,8 @@ def getNodesAndEdges():
             "id": nodeData['data']['id'],
             'type': nodeData['type'],
             'data': nodeData['data'],
-            'position': nodeData['position']
+            'position': nodeData['position'],
+            'style': nodeData['style']
                       })
     
     for edge in G.edges:
@@ -88,10 +93,12 @@ def runGraph():
 
 def stopGraph():
     for node in G.nodes:
-        G.nodes[node]['obj'].run = False
-    # for task in N.tasks:
-    #     if task:
-    #         task.cancel()
+        if 'obj' in G.nodes[node]: 
+            print(f"stopping {node}")
+            G.nodes[node]['obj'].run = False
+    for task in N.tasks:
+        if task:
+            task.cancel()
     N.tasks = []
 
 

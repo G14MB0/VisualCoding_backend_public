@@ -14,6 +14,7 @@ class Node(BaseModel):
     id: str
     type: str
     data: dict
+    style: dict
     position: dict
 
         
@@ -21,22 +22,24 @@ class Node(BaseModel):
 class AddNode(BaseModel):
     type: str
     data: dict
+    style: dict
     name: str
     category: str
 
-    # Serialize data when dumping to JSON
-    class Config:
-        json_encoders = {
-            dict: lambda v: json.dumps(v)
-        }
+    # # Serialize data when dumping to JSON
+    # class Config:
+    #     json_encoders = {
+    #         dict: lambda v: json.dumps(v)
+    #     }
 
-
+    
 
         
 class GetNode(BaseModel):
     type: str
     data: dict
     name: str
+    style: dict
     category: str
 
     # Serialize data when dumping to JSON
@@ -45,13 +48,15 @@ class GetNode(BaseModel):
             dict: lambda v: json.dumps(v)
         }
 
-    # Deserialize data when loading from JSON
-    @validator('data', pre=True)
+    @validator('data', 'style', pre=True, each_item=False)
     def parse_json(cls, v):
-        try:
-            return json.loads(v)
-        except ValueError:
-            return v
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except ValueError:
+                raise ValueError(f"Unable to parse string to dict: {v}")
+        return v
+
 
 class DeleteNode(BaseModel):
     name: str

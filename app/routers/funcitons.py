@@ -26,8 +26,10 @@ def getAllFuncitons(db: Session = Depends(get_db)):
 @router.post("/")
 def addFunciton(data: schemas.AddNode, db: Session = Depends(get_db)):
 
+    print(data)
     newNode = models.Nodes(type=data.type,
                            data=json.dumps(data.data),
+                           style=json.dumps(data.style),
                            category=data.category,
                            name=data.name)
     

@@ -1,6 +1,7 @@
 import time
 import threading
 import asyncio
+from asyncio.exceptions import CancelledError
 import re
 import traceback
 
@@ -45,6 +46,21 @@ class Node:
     def execute(self):
         pass  # To be overridden by subclasses
 
+
+class DebugNode(Node):
+    """A function Node extend the Node class as a type: "function"
+    
+    Define also function: function
+    """    
+    def __init__(self, id):
+        super().__init__(id, "debug")
+
+        # Returns of the funciton
+
+    async def execute(self, graph, data=None):
+        await gv.setRunningNode(self.id, data)
+        await asyncio.sleep(0.5)
+        await gv.setStoppingNode(self.id, data)
 
 
 class FunctionNode(Node):
@@ -185,32 +201,38 @@ class TimerNode(Node):
     def __init__(self, id, value, mu, loop=False):
         super().__init__(id, "timer")
         self.value = value
+        self.delay = 0
         self.mu = mu
         self.loop = loop
 
 
     async def waitTimer(self):
-        delay = self.value
-        if self.mu == "m":
-            delay *= 60
-        elif self.mu == "h":
-            delay *= 3600
-        await asyncio.sleep(delay)
-        return
+        try:
+            self.delay = self.value
+            if self.mu == "m":
+                self.delay *= 60
+            elif self.mu == "h":
+                self.delay *= 3600
+            await asyncio.sleep(self.delay)
+            return
+        except CancelledError:
+            self.run = False
 
 
     async def execute(self, graph, data):
+        counter = 0
         while self.run:
             await gv.setRunningNode(self.id)
             print(f"Starting Timer {self.id}")
             await self.waitTimer()
             print(f"Timer {self.id} finished.")
 
+            counter += 1*self.delay
             # Procedi con l'esecuzione dei nodi successori sequenzialmente
             successors = list(graph.successors(self.id))
             for successor in successors:
                 await gv.setStoppingNode(self.id)
-                task = asyncio.create_task(execute_successors(graph, successor))
+                task = asyncio.create_task(execute_successors(graph, successor, data=counter))
                 tasks.append(task)
 
             
