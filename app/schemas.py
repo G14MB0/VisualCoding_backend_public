@@ -66,6 +66,7 @@ class Edge(BaseModel):
     source: str
     target: str
     sourceHandle: str
+    targetHandle: str
 
 # Define a model for the complete data structure you expect from React
 class GraphData(BaseModel):

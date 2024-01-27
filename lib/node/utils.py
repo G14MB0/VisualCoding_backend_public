@@ -35,7 +35,7 @@ def updateNodesAndEdges(data):
             print("Add Debug Node")
             temp  = N.DebugNode(node['id'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'MuxerNode':
+        elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':# or node["type"] == 'SumNode' or node["type"] == 'SumNode' :
             print("Add Muxer Node")
             temp  = N.MuxerNode(node['id'], node['data']['operation'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
@@ -46,7 +46,7 @@ def updateNodesAndEdges(data):
 
     # Add edges
     for edge in data["edges"]:
-        G.add_edge(edge["source"], edge["target"], sourceHandle=edge['sourceHandle'])
+        G.add_edge(edge["source"], edge["target"], sourceHandle=edge['sourceHandle'], targetHandle=edge['targetHandle'])
 
 
 def plotGraph():
@@ -73,7 +73,8 @@ def getNodesAndEdges():
             'source': edge[0],
             'target':edge[1],
             'type': 'smoothstep',
-            'sourceHandle': G.edges[edge]['sourceHandle']
+            'sourceHandle': G.edges[edge]['sourceHandle'],
+            'targetHandle': G.edges[edge]['targetHandle'],
         })
 
     data = {"nodes": nodes, "edges": edges}

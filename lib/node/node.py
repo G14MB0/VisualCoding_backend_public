@@ -13,14 +13,14 @@ tasks = []
 
 
 
-async def execute_successors(graph, node_id, data=None):
+async def execute_successors(graph, node_id, data=None, predecessor=None):
     # global tasks
-    print(f"task created on {node_id} with data {data}")
+    # print(f"task created on {node_id} with data {data}")
     if node_id in graph.nodes:
         if 'obj' in graph.nodes[node_id]:
             node = graph.nodes[node_id]['obj']
-            await node.execute(graph, data)  
-
+            print(f"executing node {node_id}")
+            await node.execute(graph, data, predecessor)  
 
 
 
@@ -35,6 +35,10 @@ async def start_graph_execution(graph):
 
      # Now, await all tasks to complete. This is where concurrency happens.
     await asyncio.gather(*tasks)
+
+    # for node in list(graph.nodes):
+    #     if hasattr(gv, f"{node}_data"):
+    #         delattr(gv, f"{node}_data")
 
 
 class Node:
@@ -88,6 +92,7 @@ class FunctionNode(Node):
                 else:
                     self.function_name = None
                     print("Function name could not be determined.")
+                    self.output = "Function name could not be determined."
 
                 # Execute the function definition if a name was found
                 if self.function_name:
@@ -104,17 +109,21 @@ class FunctionNode(Node):
                             self.output = function_ref(data) if data else function_ref()
                     else:
                         print("Function reference not found.")
+                        self.output = "Function reference not found."
+
 
                 
                 # Procedi con l'esecuzione dei nodi successori sequenzialmente
                 successors = list(graph.successors(self.id))
                 await gv.setStoppingNode(self.id)
                 for successor in successors:
-                    await execute_successors(graph, successor, data=self.output)  
+
+                    await execute_successors(graph, successor, data=self.output, predecessor=self.id)  
 
                 return
             except:
                 await gv.setStoppingNode(self.id)
+                self.output = traceback.print_exc()
                 print(traceback.print_exc())
                 return
                     
@@ -165,7 +174,7 @@ class ComparatorNode(Node):
                                         if graph.get_edge_data(self.id, successor)['sourceHandle'] == 'b']
 
                 await gv.setStoppingNode(self.id)
-                await execute_successors(graph, specific_successors[0])  
+                await execute_successors(graph, specific_successors[0], predecessor=self.id)  
 
             except:
                 await gv.setStoppingNode(self.id)
@@ -179,28 +188,46 @@ class MuxerNode(Node):
     def __init__(self, id, operation):
         super().__init__(id, "muxer")
         self.operation = operation
-        self.toOperate = []
+        self.toOperate = {}
     
 
     async def operate(self):
         if self.operation == "sum":
-            self.output = sum(self.toOperate)
+            self.output = sum(self.toOperate.values())
         
         if self.operation == "multiply":
-            self.output = functools.reduce(lambda a, b: a*b, self.toOperate)
-        
-        return
+            self.output = 1
+            for value in self.toOperate.values():
+                self.output *= value
+
+        if self.operation == "subtract":
+            self.output = self.toOperate['upperNode'] - self.toOperate['lowerNode']
+
+        if self.operation == "divide":
+            self.output = self.toOperate['upperNode'] / self.toOperate['lowerNode']
 
 
     async def execute(self, graph, data=None, caller=None):
         await gv.setRunningNode(self.id)
+        print(f"data of {caller}: {data}")
         # Check if caller has been passed
         if caller == None:
             self.output = "ERROR"
 
+        upperNode = [predecessor for predecessor in graph.predecessors(self.id)
+                                        if graph.get_edge_data(predecessor, self.id)['targetHandle'] == 'a']
+        lowerNode = [predecessor for predecessor in graph.predecessors(self.id)
+                                        if graph.get_edge_data(predecessor, self.id)['targetHandle'] == 'b']
+        
+        if len(upperNode) > 0 and len(lowerNode) > 0:
+            upperNode = upperNode[0]
+            lowerNode = lowerNode[0]
+        else:
+            return
+        
         # Check if the caller_data g_var exist, if not, set it with value
         l_variable = f"{caller}_data"
-        if not hasattr(gv, l_variable):
+        if not hasattr(gv, l_variable) or getattr(gv, l_variable) != data:
             setattr(gv, l_variable, data)
 
         # Now check if all the predecessors g_var has been initialized, so make the operation, otherwise pass
@@ -209,16 +236,23 @@ class MuxerNode(Node):
                 self.output = None
                 return
             else:
-                self.toOperate.append(getattr(gv, f"{predecessor}_data"))
-        
+                if predecessor == upperNode:
+                    self.toOperate["upperNode"] = (getattr(gv, f"{predecessor}_data"))
+                elif predecessor == lowerNode:
+                    self.toOperate["lowerNode"] = (getattr(gv, f"{predecessor}_data"))
+                else:
+                    print("Error in caller node.")
+                    return
+
+        print(self.toOperate)
         await self.operate()
         await gv.setStoppingNode(self.id)
         # Procedi con l'esecuzione dei nodi successori sequenzialmente
         successors = list(graph.successors(self.id))
         await gv.setStoppingNode(self.id)
         for successor in successors:
-            await execute_successors(graph, successor, data=self.output)  
-            
+            await execute_successors(graph, successor, data=self.output, predecessor=self.id)  
+
 
 class TimerNode(Node):
     def __init__(self, id, value, mu, loop=False):
@@ -255,7 +289,7 @@ class TimerNode(Node):
             successors = list(graph.successors(self.id))
             for successor in successors:
                 await gv.setStoppingNode(self.id)
-                task = asyncio.create_task(execute_successors(graph, successor, data=counter))
+                task = asyncio.create_task(execute_successors(graph, successor, data=counter, predecessor=self.id))
                 tasks.append(task)
 
             
