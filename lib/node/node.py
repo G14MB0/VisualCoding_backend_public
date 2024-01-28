@@ -1,12 +1,11 @@
-import time
-import threading
 import asyncio
 from asyncio.exceptions import CancelledError
 import re
 import traceback
-import functools
-
+import time 
 from lib import global_var as gv
+from lib.node import utils
+import inspect
 
 # Asyncio tasks
 tasks = []
@@ -35,7 +34,6 @@ async def start_graph_execution(graph):
 
      # Now, await all tasks to complete. This is where concurrency happens.
     await asyncio.gather(*tasks)
-
     # for node in list(graph.nodes):
     #     if hasattr(gv, f"{node}_data"):
     #         delattr(gv, f"{node}_data")
@@ -64,7 +62,6 @@ class DebugNode(Node):
 
     async def execute(self, graph, data=None, caller=None):
         await gv.setRunningNode(self.id, data)
-        await asyncio.sleep(0.5)
         await gv.setStoppingNode(self.id, data)
 
 
@@ -103,10 +100,25 @@ class FunctionNode(Node):
                         # Check if the function is a coroutine function
                         if asyncio.iscoroutinefunction(function_ref):
                             # If it is, await it
-                            self.output = await function_ref(data) if data else await function_ref()
+                            if data:
+                                self.output = await function_ref(data)
+                            else:
+                                sig = inspect.signature(function_ref)
+                                if len(sig.parameters) > 0:
+                                    self.output = await function_ref(None)
+                                else:
+                                    self.output = await function_ref()
+                            # self.output = await function_ref(data) if data else await function_ref()
                         else:
                             # Call the function normally if it's not async
-                            self.output = function_ref(data) if data else function_ref()
+                            if data:
+                                self.output = function_ref(data)
+                            else:
+                                sig = inspect.signature(function_ref)
+                                if len(sig.parameters) > 0:
+                                    self.output = function_ref(None)
+                                else:
+                                    self.output = function_ref()
                     else:
                         print("Function reference not found.")
                         self.output = "Function reference not found."
@@ -117,7 +129,6 @@ class FunctionNode(Node):
                 successors = list(graph.successors(self.id))
                 await gv.setStoppingNode(self.id)
                 for successor in successors:
-
                     await execute_successors(graph, successor, data=self.output, predecessor=self.id)  
 
                 return
@@ -209,7 +220,6 @@ class MuxerNode(Node):
 
     async def execute(self, graph, data=None, caller=None):
         await gv.setRunningNode(self.id)
-        print(f"data of {caller}: {data}")
         # Check if caller has been passed
         if caller == None:
             self.output = "ERROR"
@@ -244,9 +254,7 @@ class MuxerNode(Node):
                     print("Error in caller node.")
                     return
 
-        print(self.toOperate)
         await self.operate()
-        await gv.setStoppingNode(self.id)
         # Procedi con l'esecuzione dei nodi successori sequenzialmente
         successors = list(graph.successors(self.id))
         await gv.setStoppingNode(self.id)
@@ -254,10 +262,83 @@ class MuxerNode(Node):
             await execute_successors(graph, successor, data=self.output, predecessor=self.id)  
 
 
+
+class EqualsNode(Node):
+    def __init__(self, id, logic):
+        super().__init__(id, "equals")
+        self.logic = logic
+        self.toOperate = {}
+    
+
+    async def operate(self):
+        if self.logic == "=":
+            return "a" if self.toOperate["upperNode"] == self.toOperate["lowerNode"] else "b"
+        if self.logic == ">":
+            return "a" if self.toOperate["upperNode"] > self.toOperate["lowerNode"] else "b"
+        if self.logic == "=":
+            return "a" if self.toOperate["upperNode"] < self.toOperate["lowerNode"] else "b"
+
+
+    async def execute(self, graph, data=None, caller=None):
+        await gv.setRunningNode(self.id)
+        # Check if caller has been passed
+        if caller == None:
+            self.output = "ERROR"
+
+        upperNode = [predecessor for predecessor in graph.predecessors(self.id)
+                                        if graph.get_edge_data(predecessor, self.id)['targetHandle'] == 'a']
+        lowerNode = [predecessor for predecessor in graph.predecessors(self.id)
+                                        if graph.get_edge_data(predecessor, self.id)['targetHandle'] == 'b']
+        
+        if len(upperNode) > 0 and len(lowerNode) > 0:
+            upperNode = upperNode[0]
+            lowerNode = lowerNode[0]
+        else:
+            return
+        
+        # Check if the caller_data g_var exist, if not, or its value is changed, set it with new value
+        l_variable = f"{caller}_data"
+        if not hasattr(gv, l_variable) or getattr(gv, l_variable) != data:
+            setattr(gv, l_variable, data)
+
+        # Now check if all the predecessors g_var has been initialized, so make the operation, otherwise pass
+        for predecessor in list(graph.predecessors(self.id)):
+            if not hasattr(gv, f"{predecessor}_data"):
+                self.output = None
+                return
+            else:
+                if predecessor == upperNode:
+                    self.toOperate["upperNode"] = (getattr(gv, f"{predecessor}_data"))
+                elif predecessor == lowerNode:
+                    self.toOperate["lowerNode"] = (getattr(gv, f"{predecessor}_data"))
+                else:
+                    print("Error in caller node.")
+                    return
+
+
+        outputNode = await self.operate()
+        # Procedi con l'esecuzione dei nodi successori sequenzialmente
+        await gv.setStoppingNode(self.id)
+
+        specific_successors = [successor for successor in graph.successors(self.id)
+                            if graph.get_edge_data(self.id, successor)['sourceHandle'] == outputNode]
+        
+        if len(specific_successors) > 0:
+            await execute_successors(graph, specific_successors[0], predecessor=self.id)
+
+
 class TimerNode(Node):
     def __init__(self, id, value, mu, loop=False):
         super().__init__(id, "timer")
-        self.value = value
+        self.value = float(value)
+
+        # Set the gv.biggerTimerValue as the greater timer
+        if not hasattr(gv, "biggerTimerValue"):
+            setattr(gv, "biggerTimerValue", self.value)
+        else:
+            if getattr(gv, "biggerTimerValue") < self.value:
+                setattr(gv, "biggerTimerValue", self.value)
+
         self.delay = 0
         self.mu = mu
         self.loop = loop
@@ -298,5 +379,34 @@ class TimerNode(Node):
                 break
         
         await gv.setStoppingNode(self.id)
+        
+
+
+
+class PollingNode(Node):
+    def __init__(self, id, globalVar):
+        super().__init__(id, "polling")
+        self.globalVarToPoll = globalVar
+
+    @classmethod
+    async def broadcast(cls, value):
+        """Broadcast the value to all nodes."""
+        for node in gv.pollingNodes:
+            # You might want to make this part asynchronous or handle it differently
+            await node.handle_value(value)
+
+    async def handle_value(self, value):
+        """Handle the received value."""
+        if next(iter(value.keys())) == self.globalVarToPoll:
+            await self.execute(utils.G, value)
+
+    async def execute(self, graph, value):
+        try:
+            successors = list(graph.successors(self.id))
+            for successor in successors:
+                task = asyncio.create_task(execute_successors(graph, successor, data=next(iter(value.values())), predecessor=self.id))
+                tasks.append(task)
+        except:
+            pass
         
 

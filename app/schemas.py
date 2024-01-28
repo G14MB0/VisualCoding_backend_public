@@ -81,3 +81,7 @@ class FunctionNode(BaseModel):
 
 class Save(BaseModel):
     filePath: str = ""
+
+
+class GlobalVar(BaseModel):
+    name: str

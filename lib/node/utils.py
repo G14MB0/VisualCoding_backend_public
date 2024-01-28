@@ -2,6 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import asyncio
 
+from lib import global_var as gv
+
 from lib.node import node as N
 
 # Create a NetworkX graph
@@ -13,6 +15,7 @@ triggersNode = []
 
 def updateNodesAndEdges(data):
     G.clear()
+    gv.pollingNodes = []
 
     # Add nodes
     for node in data["nodes"]:
@@ -23,10 +26,13 @@ def updateNodesAndEdges(data):
             else:
                 temp = N.TimerNode(node['id'], node["data"]['timerInterval'], node["data"]['selected'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'FunctionNode' and 'code' in node["data"]:
+        elif (node["type"] == 'FunctionNode' and 'code' in node["data"]) or (node.get('data', {}).get('type') == 'FunctionNode' and 'code' in node["data"]):
             print("Add Function Node")
             temp = N.FunctionNode(node['id'], node["data"]['code'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+            if node.get('data', {}).get('isPolling') == 'true':
+                print("Add Polling Node")
+                gv.pollingNodes.append(N.PollingNode(node['id'], node['data']['replacementKey']))
         elif node["type"] == 'ComparatorNode' and 'code' in node["data"]:
             print("Add Comparator Node")
             temp = N.ComparatorNode(node['id'], node["data"]['code'])
@@ -35,11 +41,16 @@ def updateNodesAndEdges(data):
             print("Add Debug Node")
             temp  = N.DebugNode(node['id'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':# or node["type"] == 'SumNode' or node["type"] == 'SumNode' :
+        elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':
             print("Add Muxer Node")
             temp  = N.MuxerNode(node['id'], node['data']['operation'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'EqualsNode':
+            print("Add Equals Node")
+            temp  = N.EqualsNode(node['id'], node['data']['logic'])
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
+            print(f"adding a node without object: {node['type']}")
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
 
 

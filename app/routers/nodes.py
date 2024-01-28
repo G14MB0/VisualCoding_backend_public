@@ -65,7 +65,11 @@ async def save_graph(data: schemas.Save):
     
     print(filePath)
     # Get the nodes and edges data
-    toSave = getNodesAndEdges()
+    graphSchema = getNodesAndEdges()
+    toSave = {
+        "graphSchema": graphSchema,
+        "globalVar": global_var.globalVarDict
+    }
     # Convert the data to a JSON string
     data_str = json.dumps(toSave, indent=4)
     # Save the JSON string to a file with the .r2f extension
@@ -83,22 +87,44 @@ async def load_graph():
     with open(filePath, 'r') as file:
         # Parse the JSON string in the file to a Python dictionary
         data = json.load(file)
-    updateNodesAndEdges(data)
+    updateNodesAndEdges(data['graphSchema'])
+    global_var.globalVarDict = data['globalVar']
     return {'filePath': filePath}
 
-    
+
+
+@router.get("/globalvar/")
+def getGlobalVar():
+    return global_var.globalVarDict
+
+
+@router.post("/globalvar/")
+def addGlobalVar(data: schemas.GlobalVar):
+    if not data.name in global_var.globalVarDict.keys():
+        global_var.globalVarDict[data.name] = None
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Already defined this global variable: {data.name}")
+    return {"message": f"successfully added new global variabl: {data.name}"}
+
+
+@router.post("/globalvar/delete")
+def deleteGlobalVar(data: schemas.GlobalVar):
+    if data.name in global_var.globalVarDict.keys():
+        global_var.globalVarDict.pop(data.name, None)
+    return {"message": f"{data.name} delete"}
+
 
 
 @router.websocket("/ws/info/start")
 async def websocket_endpoint_info(websocket: WebSocket):
 
+    timeout = getattr(global_var, "biggerTimerValue")
     # Accept 
     await websocket.accept()
-    consecutive_not_running_count = 0
     try:
         while True:
             # Wait for a notification of change
-            messageDict = await asyncio.wait_for(global_var.notificationQueue.get(), timeout=2)
+            messageDict = await asyncio.wait_for(global_var.notificationQueue.get(), timeout=timeout+1)
             # If there are messages, send them as a single array
             if messageDict:
                 await websocket.send_text(json.dumps(messageDict))
