@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import asyncio
 
 from lib import global_var as gv
-
+import time
 from lib.node import node as N
+from app.routers.pythonBus import utils
 
 # Create a NetworkX graph
 G = nx.DiGraph()
@@ -48,6 +49,10 @@ def updateNodesAndEdges(data):
         elif node["type"] == 'EqualsNode':
             print("Add Equals Node")
             temp  = N.EqualsNode(node['id'], node['data']['logic'])
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'OnMessageNode':
+            print("Add onMessageNode Node")
+            temp  = N.OnMessageNode(node['id'], node['data']['propagatedSignal'])
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
             print(f"adding a node without object: {node['type']}")
@@ -96,6 +101,8 @@ def getNodesAndEdges():
 loop = asyncio.get_event_loop()
 
 def runGraph():
+    for name in utils.canChannel.keys():
+        utils.canChannel[name].propagateLog = True
     # Ensure all nodes are set to run
     for node in G.nodes:
         if 'obj' in G.nodes[node]:
@@ -108,10 +115,13 @@ def runGraph():
 
 
 def stopGraph():
+    for name in utils.canChannel.keys():
+            utils.canChannel[name].propagateLog = False
     for node in G.nodes:
         if 'obj' in G.nodes[node]: 
             print(f"stopping {node}")
             G.nodes[node]['obj'].run = False
+    time.sleep(0.5)
     for task in N.tasks:
         if task:
             task.cancel()

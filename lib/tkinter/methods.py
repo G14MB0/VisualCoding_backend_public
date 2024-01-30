@@ -1,48 +1,48 @@
 from tkinter import Tk, filedialog
+from queue import Queue
+import threading
 
+def thread_safe_file_dialog(q, file_type):
+    root = Tk()
+    root.withdraw()  # Hide the main window
+    root.attributes("-topmost",True)
 
-def tk_selectFile(fileType: str = "") -> str:
-    """ Use tkinter to opens a windows file selection dialog
+    if file_type:
+        file_path = filedialog.askopenfilename(filetypes=[(f"{file_type} files", f"*.{file_type}")])
+    else:
+        file_path = filedialog.askopenfilename()
+    root.destroy()
+    q.put(file_path)
 
-        Errors are not handles. If any, it returns an empty string
-
-    Args:
-        fileType (str, optional): defining a fileType (like .txt) add the restriction to file selection. Defaults to "".
-
-    Returns:
-        str: the absolute file path
-    """    
-    try:
-        root = Tk()
-        root.withdraw()   
-        root.wm_attributes('-topmost',1)
-        if fileType != "":
-            file = filedialog.askopenfilename(filetypes=[(f"{fileType} files", f"*.{fileType}")])
-        else:
-            file = filedialog.askopenfilename()
-        print(file)
-        return file
-    except:
-        return ""
+async def run_file_dialog(file_type: str = "") -> str:
+    q = Queue()
+    dialog_thread = threading.Thread(target=thread_safe_file_dialog, args=(q, file_type), daemon=True)
+    dialog_thread.start()
+    dialog_thread.join()  # Wait for the thread to finish
+    return q.get()
     
 
-def tk_selectFolder() -> str:
-    """Use tkinter to opens a windows folder selection dialog
 
-    Errors are not handles. If any, it returns an empty string
-
-    Returns:
-        str: the folder absolute path
-    """    
+def thread_safe_folder_dialog(q):
     try:
         root = Tk()
         root.withdraw()
-        root.attributes("-topmost",True)
+        root.attributes("-topmost", True)
         root.overrideredirect(True)
         folder = filedialog.askdirectory()
-        return folder
-    except:
-        return ""
+        root.destroy()
+    except Exception as e:
+        print(e)
+        folder = ""
+    q.put(folder)
+
+
+async def run_folder_dialog() -> str:
+    q = Queue()
+    dialog_thread = threading.Thread(target=thread_safe_folder_dialog, args=(q,), daemon=True)
+    dialog_thread.start()
+    dialog_thread.join()  # Wait for the thread to finish
+    return q.get()
     
 
 def tk_save_as():

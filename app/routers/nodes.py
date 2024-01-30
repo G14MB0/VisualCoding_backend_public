@@ -82,14 +82,14 @@ async def save_graph(data: schemas.Save):
 @router.get("/load/")
 async def load_graph():
 
-    filePath = tk_selectFile(fileType="r2f")
+    file_path = await run_file_dialog("r2f")
     # Open the file with the .r2f extension
-    with open(filePath, 'r') as file:
+    with open(file_path, 'r') as file:
         # Parse the JSON string in the file to a Python dictionary
         data = json.load(file)
     updateNodesAndEdges(data['graphSchema'])
     global_var.globalVarDict = data['globalVar']
-    return {'filePath': filePath}
+    return {'filePath': file_path}
 
 
 
@@ -118,13 +118,14 @@ def deleteGlobalVar(data: schemas.GlobalVar):
 @router.websocket("/ws/info/start")
 async def websocket_endpoint_info(websocket: WebSocket):
 
-    timeout = getattr(global_var, "biggerTimerValue")
+    timeout = getattr(global_var, "biggerTimerValue", None)
+    timeout = timeout + 1 if timeout else timeout
     # Accept 
     await websocket.accept()
     try:
         while True:
             # Wait for a notification of change
-            messageDict = await asyncio.wait_for(global_var.notificationQueue.get(), timeout=timeout+1)
+            messageDict = await asyncio.wait_for(global_var.notificationQueue.get(), timeout=timeout)
             # If there are messages, send them as a single array
             if messageDict:
                 await websocket.send_text(json.dumps(messageDict))

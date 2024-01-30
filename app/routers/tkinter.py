@@ -4,10 +4,14 @@
 #fastAPI things
 from fastapi import APIRouter
 from lib.tkinter.methods import *
+import os
+import subprocess
+from lib.pythonBus.pythonBus import log_folder
+from lib.local_config import config_folder_path
 
 
 router = APIRouter(
-    prefix="/explorer",
+    prefix="/tkinter",
     tags=['WindowsFileExplorer']
 )
 
@@ -18,14 +22,14 @@ def getInfo():
 
 
 @router.get("/file")
-def selectFile():
+async def selectFile():
     """open a windows filedialog window to select a file path without path parameter
     """   
-    file = tk_selectFile("")
+    file = await run_file_dialog("")
     return file
 
 @router.get("/file/{filetype}")
-def selectFile(filetype = ""):
+async def selectFile(filetype = ""):
     """open a windows filedialog window to select a file path
 
     Args:
@@ -34,12 +38,32 @@ def selectFile(filetype = ""):
     Returns:
         _type_: the path of the selected file
     """    
-    file = tk_selectFile(filetype)
-    return file
+    file_path = await run_file_dialog(filetype)
+    print(file_path)
+    return file_path
 
 
 @router.get("/folder")
-def selectFolder():
-    folder = tk_selectFolder()
-    return folder
+async def selectFolder():
+    folder_path = await run_folder_dialog()
+    print(folder_path)
+    return folder_path
 
+
+@router.get("/openfolder/{folder}")
+def openFolder(folder):
+    if folder == "config":
+        # Check if the path is a valid directory
+        if os.path.isdir(config_folder_path):
+            # Open the folder using the default file explorer
+            subprocess.Popen(f'explorer "{config_folder_path}"')
+        else:
+            return "The folder does not exist."
+    
+    elif folder == "log":
+        # Check if the path is a valid directory
+        if os.path.isdir(log_folder):
+            # Open the folder using the default file explorer
+            subprocess.Popen(f'explorer "{log_folder}"')
+        else:
+            return "The folder does not exist."

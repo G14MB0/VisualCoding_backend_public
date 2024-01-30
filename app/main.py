@@ -25,10 +25,14 @@ uvicorn app.main:app --reload #start the server without the main.py file
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import nodes, funcitons
+from app.routers import nodes, funcitons, tkinter, setting
+from app.routers.pythonBus import pythonBus, utils
 
 from app import models
 from app.database import engine
+
+from lib.node import utils as nodeUtils
+from lib.node import node as N
 
 from contextlib import asynccontextmanager
 
@@ -93,8 +97,16 @@ async def lifespan(app: FastAPI):
 
     yield  # This yield separates startup from shutdown code
 
+    utils.pythonBusStop()
     # Code here runs after the app stops
-
+    for node in nodeUtils.G.nodes:
+        if 'obj' in nodeUtils.G.nodes[node]: 
+            print(f"stopping {node}")
+            nodeUtils.G.nodes[node]['obj'].run = False
+    for task in N.tasks:
+        if task:
+            task.cancel()
+    N.tasks = []
     # this is used to print all the thread that remains appended after the application close (if some opened by you), if any thread but MainThread is
     # still there, you need to handle that thread correctly in order to make it close before the app shutdown.
     # this can be appreciate if you use "reload" parameter, since it not works with not correctly closed thread
@@ -129,6 +141,9 @@ app.add_middleware(
 
 app.include_router(nodes.router)
 app.include_router(funcitons.router)
+app.include_router(pythonBus.router)
+app.include_router(tkinter.router)
+app.include_router(setting.router)
 
 
 @app.get("/")

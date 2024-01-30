@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 ######################################################
-##              USER OPERATION TOKEN                ##
+##                     NODE                         ##
 ######################################################  
 
 # Define a model for the node structure
@@ -85,3 +85,49 @@ class Save(BaseModel):
 
 class GlobalVar(BaseModel):
     name: str
+
+
+######################################################
+##                   PYTHONBUS                      ##
+######################################################  
+
+class UserChannelConfig(BaseModel):
+    hw_channel: int
+    serial_number: int
+    ch_num: int  #application channel number
+    # hw_type: str #this is something like "VN1630" and is then converted in the method to the corresponding int
+    bitrate: int = 500000
+    fd: bool = False
+    data_bitrate: int = 2000000 #if the fd parameter is true, this is used as data bitrate for the arbitration in CAN-FD
+    name: str = "" # this is optional but is needed in the log filename.
+    txtLog: bool = False
+
+
+class VectorChannelConfig(UserChannelConfig):
+    db_path: str
+    maxSize: int = 100 * 1024 * 1024 #default 100 Mb, max file size for logging part
+    decode: bool = False
+    propagate: str = ""  #this must be a list of element separated by a comma (,). it will be used to propagate the value of those elements in all the code
+
+
+class RemoveChannel(BaseModel):
+    serial_number: int
+    name: str
+    hw_channel: int
+
+class DAIOstart(BaseModel):
+    serial_number: int
+    frequency: int = 1000
+    ch_num: int
+
+
+######################################################
+##                    SETTING                       ##
+######################################################  
+class SetSetting(BaseModel):
+    name: str
+    value: str
+
+
+class Info(BaseModel):
+    info: str

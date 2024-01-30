@@ -2,7 +2,8 @@ import asyncio
 from asyncio.exceptions import CancelledError
 import re
 import traceback
-import time 
+import datetime
+import queue
 from lib import global_var as gv
 from lib.node import utils
 import inspect
@@ -18,7 +19,7 @@ async def execute_successors(graph, node_id, data=None, predecessor=None):
     if node_id in graph.nodes:
         if 'obj' in graph.nodes[node_id]:
             node = graph.nodes[node_id]['obj']
-            print(f"executing node {node_id}")
+            # print(f"executing node {node_id}")
             await node.execute(graph, data, predecessor)  
 
 
@@ -28,7 +29,6 @@ async def start_graph_execution(graph):
     # Identifica i nodi senza predecessori e avviali in modo asincrono
     initial_nodes = [node for node in graph.nodes if len(list(graph.predecessors(node))) == 0]
     for node_id in initial_nodes:
-        gv.runningNodes
         task = asyncio.create_task(execute_successors(graph, node_id))
         tasks.append(task)
 
@@ -275,7 +275,7 @@ class EqualsNode(Node):
             return "a" if self.toOperate["upperNode"] == self.toOperate["lowerNode"] else "b"
         if self.logic == ">":
             return "a" if self.toOperate["upperNode"] > self.toOperate["lowerNode"] else "b"
-        if self.logic == "=":
+        if self.logic == "<":
             return "a" if self.toOperate["upperNode"] < self.toOperate["lowerNode"] else "b"
 
 
@@ -408,5 +408,42 @@ class PollingNode(Node):
                 tasks.append(task)
         except:
             pass
-        
+
+
+
+class OnMessageNode(Node):
+    def __init__(self, id, propagatedSignal):
+        super().__init__(id, "polling")
+        self.propagatedSignal = getattr(gv, propagatedSignal)
+
+    async def execute(self, graph, data=None, caller=None):
+        await gv.setRunningNode(self.id)
+        while self.run:
+            # try:
+            #     value = await asyncio.wait_for(self.propagatedSignal.get(), timeout=10)
+            #     # Process the received value
+            #     successors = list(graph.successors(self.id))
+            #     for successor in successors:
+            #         task = asyncio.create_task(execute_successors(graph, successor, data=value, predecessor=self.id))
+            #         tasks.append(task)
+
+            # except asyncio.TimeoutError:
+            #     # Handle the timeout case here
+            #     print(f"Timeout occurred while waiting for a value in node {self.id}")
+            #     # You can add any specific actions to be taken on timeout here
+            try:
+                await asyncio.sleep(0.0001)
+                item = self.propagatedSignal.get_nowait()
+                print(item)
+                successors = list(graph.successors(self.id))
+                for successor in successors:
+                    task = asyncio.create_task(execute_successors(graph, successor, data=item, predecessor=self.id))
+                    tasks.append(task)
+            except queue.Empty:
+                pass  # Queue is empty, check the next one
+            except CancelledError:
+                self.run = False
+
+        await gv.setStoppingNode(self.id)
+            
 
