@@ -3,16 +3,19 @@ from queue import Queue
 import threading
 
 def thread_safe_file_dialog(q, file_type):
-    root = Tk()
-    root.withdraw()  # Hide the main window
-    root.attributes("-topmost",True)
+    try:
+        root = Tk()
+        root.withdraw()  # Hide the main window
+        root.attributes("-topmost",True)
 
-    if file_type:
-        file_path = filedialog.askopenfilename(filetypes=[(f"{file_type} files", f"*.{file_type}")])
-    else:
-        file_path = filedialog.askopenfilename()
-    root.destroy()
-    q.put(file_path)
+        if file_type:
+            file_path = filedialog.askopenfilename(filetypes=[(f"{file_type} files", f"*.{file_type}")])
+        else:
+            file_path = filedialog.askopenfilename()
+        root.destroy()
+        q.put(file_path)
+    except:
+        return
 
 async def run_file_dialog(file_type: str = "") -> str:
     q = Queue()

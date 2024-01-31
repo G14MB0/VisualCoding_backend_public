@@ -5,7 +5,7 @@ from datetime import datetime
 import cantools
 
 from queue import Queue, Empty
-
+from app.routers.pythonBus.utils import calculateNewCrc
 import importlib
 
 from lib import local_config
@@ -15,6 +15,7 @@ from collections import deque
 import os
 import traceback
 import asyncio
+import json
 
 from lib.pythonBus.support import flags
 
@@ -162,15 +163,17 @@ class VectorCanChannel():
                 delattr(module, key)
 
         for element in elements:
+            name = f"{self.channelName}_{element}"
             # check if the new element already exist (this should always not exist)
-            if hasattr(module, element):
-                print(f"gloabl_var already has the variable {element}")
+            if hasattr(module, name):
+                print(f"gloabl_var already has the variable {self.channelName}_{element}")
                 continue
             else:
+                name = f"{self.channelName}_{element}"
                 # If the variable does not exist, create it and set it to a default value
                 default_value = Queue()  # You can define your default value
-                setattr(module, element, default_value)
-                self.propagate[element] = getattr(module, element)
+                setattr(module, name, default_value)
+                self.propagate[element] = getattr(module, name)
 
                 # create a local standard queue 
                 self.propagateLocalQueues[element] = Queue()
@@ -230,6 +233,9 @@ class VectorCanChannel():
                 if isinstance(decoded_message[key], cantools.database.can.signal.NamedSignalValue):
                     decoded_message[key] = str(decoded_message[key].value)  # or some other appropriate conversion
             decoded_message["rawMessageValue"] = ''.join(hex(byte)[2:].zfill(2) for byte in message.data)
+            decoded_message["msgTimeStamp"] = message.timestamp
+            decoded_message["receivedFromChannelName"] = self.channelName
+            decoded_message["msgID"] = message.arbitration_id # ridondante ma per il momento va bene
             return decoded_message
         except Exception as e:
             hex_string = ''.join(hex(byte)[2:].zfill(2) for byte in message.data)
@@ -256,11 +262,14 @@ class VectorCanChannel():
                                         # if self.logging:
                                         # If so, append the value taken by the messages dict, at keys msg.ID, using the value defined in the propagation key after the "."
                                         if self.propagateLog: 
-                                            self.propagateLocalQueues[message].put(msgDecoded[message.split(".")[1]])
-                                            self.propagate[message].put(msgDecoded[message.split(".")[1]])
-                                        self.lastValue_dict[message] = msgDecoded[message.split(".")[1]]
-                                    except KeyError:
-                                        print(f"the message {msg.arbitration_id} has no signal {message.split('.')[1]}")
+                                            # self.propagateLocalQueues[message].put(msgDecoded[message.split(".")[1]])
+                                            # self.propagate[message].put(msgDecoded[message.split(".")[1]])
+                                            self.propagateLocalQueues[message].put(msgDecoded)
+                                            self.propagate[message].put(msgDecoded)
+                                        # self.lastValue_dict[message] = msgDecoded[message.split(".")[1]]
+                                        self.lastValue_dict[message] = msgDecoded
+                                    # except KeyError:
+                                    #     print(f"the message {msg.arbitration_id} has no signal {message.split('.')[1]}")
                                     except:
                                         print(traceback.print_exc())
                                         
@@ -378,6 +387,46 @@ class VectorCanChannel():
         self.running = False
         self.notifier.stop()
         self.bus.shutdown()
+
+
+    
+    def sendMessage(self, message_data):
+        try:
+            # Check if message_data is a string and deserialize it
+            if isinstance(message_data, str):
+                message_data = json.loads(message_data)
+            # Convert values to integers where possible
+            for key, value in message_data.items():
+                try:
+                    message_data[key] = int(value)
+                except ValueError:
+                    # If conversion fails, retain the original value
+                    pass
+
+            # Now you can use 'pop' since message_data should be a dictionary
+            rawMessageValue = message_data.pop("rawMessageValue", None)
+            msgTimeStamp = message_data.pop("msgTimeStamp", None)
+            receivedFromChannelName = message_data.pop("receivedFromChannelName", None)
+            msgID = message_data.pop("msgID", None)
+            if isinstance(msgID, str):
+                # If msgID ends with 'x', it's already in hexadecimal format and should be converted to an integer
+                if msgID.lower().endswith('x'):
+                    msgID = int(msgID[:-1], 16)
+                else:
+                    msgID = int(msgID)
+
+
+            encoded_data = self.DBC.encode_message(msgID, message_data)
+            if len([key for key in message_data if "crc" in key.lower()]):
+                new_can_message = can.Message(arbitration_id=msgID, data=calculateNewCrc(can.Message(arbitration_id=msgID, data=encoded_data, is_extended_id=False)), is_extended_id=False)
+            else:
+                new_can_message = can.Message(arbitration_id=msgID, data=encoded_data, is_extended_id=False)
+
+            self.bus.send(new_can_message)
+            return self.parseMsg(new_can_message)
+        except:
+            print(traceback.print_exc())
+            return {}
 
 
     # def get_messages(self):

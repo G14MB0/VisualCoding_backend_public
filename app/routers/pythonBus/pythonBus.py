@@ -207,7 +207,7 @@ def getActiveChannel(data: schemas.RemoveChannel):
         utils.hwChannelPairs[data.serial_number].remove(data.hw_channel)
         utils.hwChannelPairsWithDetails = [d for d in utils.hwChannelPairsWithDetails if d.get('name') != data.name]
     except Exception as e:
-        print(e)
+        print(f"error: {e}")
 
 
 @router.post("/daio/start")

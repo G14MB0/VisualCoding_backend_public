@@ -52,7 +52,11 @@ def updateNodesAndEdges(data):
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         elif node["type"] == 'OnMessageNode':
             print("Add onMessageNode Node")
-            temp  = N.OnMessageNode(node['id'], node['data']['propagatedSignal'])
+            temp  = N.OnMessageNode(node['id'], node['data'].get('propagatedSignal', None))
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'SendMessageNode':
+            print("Add sendMessage Node")
+            temp  = N.SendMessageNode(node['id'], node['data'].get('channelToSend', None))
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
             print(f"adding a node without object: {node['type']}")
@@ -94,6 +98,7 @@ def getNodesAndEdges():
         })
 
     data = {"nodes": nodes, "edges": edges}
+    print(data)
 
     return data
 
