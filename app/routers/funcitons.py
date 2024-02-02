@@ -4,7 +4,6 @@ from app.database import get_db
 from app import models
 import json
 from sqlalchemy.orm import Session
-
 #fastAPI things
 from fastapi import status, HTTPException, APIRouter, Depends
 import re
@@ -15,6 +14,7 @@ router = APIRouter(
     prefix="/functions",
     tags=['Functions']
 )
+
 
 
 @router.get("/", response_model=List[schemas.GetNode])
@@ -53,3 +53,5 @@ def deleteFunction(data: schemas.DeleteNode, db: Session = Depends(get_db)):
     db.commit()
 
     return {"detail": f"{affected_rows} node(s) deleted"}
+
+

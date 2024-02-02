@@ -26,7 +26,7 @@
 import uvicorn
 from app.main import app
 import psutil 
-
+import sys
 # used to retrive openapi schema from fastAPI and save it in a file
 import requests
 
@@ -37,7 +37,13 @@ PORT = 12345
 WORKERS = 1
 OVERRIDE = False # Force close any other service on the same port (Not a good practice, must be used carefully or modified)
 
-RELOAD = True # Reload the app after any save
+# Check if the application is frozen (built with PyInstaller)
+if getattr(sys, 'frozen', False):
+    # Application is running from a PyInstaller bundle
+    RELOAD = False
+else:
+    # Application is running in a development environment
+    RELOAD = True
 APPPATH = "app.main:app"
 
 ### Parameters for openapi schema autosave
@@ -142,7 +148,7 @@ def generateAPIdocs(api_url: str, output_file: str):
 
 if __name__ == "__main__":
 
-    hideConsole()  #hide console. will work only on packaged distribution
+    # hideConsole()  #hide console. will work only on packaged distribution
     process = serve(HOST, PORT, WORKERS, OVERRIDE, reload=RELOAD, appPath=APPPATH)
     if OPENAPI:
         generateAPIdocs(f'http://{HOST}:{PORT}/openapi.json', FILEPATH)

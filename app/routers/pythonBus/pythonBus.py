@@ -13,6 +13,8 @@ from app.routers.pythonBus import utils
 
 import traceback
 
+
+import pprint
 # Custom serialization function
 def custom_serializer(obj):
     if isinstance(obj, pb.VectorCanChannel):

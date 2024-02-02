@@ -132,6 +132,7 @@ class VectorCanChannel():
             self.maxSize = maxLogSize
 
         self.messages = Queue()  # Dictionary to store received messages
+        self.queue_lock = threading.Lock()
         # self.newMessageFlag = True
 
         self.decode = False
@@ -232,14 +233,27 @@ class VectorCanChannel():
             for key in decoded_message:
                 if isinstance(decoded_message[key], cantools.database.can.signal.NamedSignalValue):
                     decoded_message[key] = str(decoded_message[key].value)  # or some other appropriate conversion
-            decoded_message["rawMessageValue"] = ''.join(hex(byte)[2:].zfill(2) for byte in message.data)
-            decoded_message["msgTimeStamp"] = message.timestamp
-            decoded_message["receivedFromChannelName"] = self.channelName
-            decoded_message["msgID"] = message.arbitration_id # ridondante ma per il momento va bene
+            decoded_message["__debugData"] = {
+                "rawMessageValue": ''.join(hex(byte)[2:].zfill(2) for byte in message.data),
+                "msgTimeStamp": message.timestamp,
+                "receivedFromChannelName": self.channelName,
+                "msgID": message.arbitration_id
+            }
+            # decoded_message["rawMessageValue"] = ''.join(hex(byte)[2:].zfill(2) for byte in message.data)
+            # decoded_message["msgTimeStamp"] = message.timestamp
+            # decoded_message["receivedFromChannelName"] = self.channelName
+            # decoded_message["msgID"] = message.arbitration_id # ridondante ma per il momento va bene
             return decoded_message
         except Exception as e:
             hex_string = ''.join(hex(byte)[2:].zfill(2) for byte in message.data)
-            return {"raw_data": hex_string}
+            temp = {"raw_data": hex_string}
+            temp["__debugData"] = {
+                "rawMessageValue": ''.join(hex(byte)[2:].zfill(2) for byte in message.data),
+                "msgTimeStamp": message.timestamp,
+                "receivedFromChannelName": self.channelName,
+                "msgID": message.arbitration_id
+            }
+            return temp
 
     
 
@@ -252,7 +266,11 @@ class VectorCanChannel():
                     if self.DBC is not None:
                         if self.decode:
                             msgDecoded = self.parseMsg(msg)
-                            if self.traceLog: self.messages.put({msg.arbitration_id : msgDecoded})
+                            if self.traceLog: 
+                                with self.queue_lock:
+                                    if self.messages.qsize() > 4:
+                                        self.messages = Queue()
+                                    self.messages.put({msg.arbitration_id: msgDecoded})
                             #now propagate the value of a signal if is required by self.propagate list
                             for message in self.propagateLocalQueues.keys():
                                 # Pass through all keys and check if the current msg.ID is equals to the msg.ID of the propagation keys
@@ -390,11 +408,13 @@ class VectorCanChannel():
 
 
     
-    def sendMessage(self, message_data):
+    def sendMessage(self, message_data, messageID = None):
         try:
             # Check if message_data is a string and deserialize it
             if isinstance(message_data, str):
                 message_data = json.loads(message_data)
+            
+            __debugData = message_data.pop("__debugData", None)
             # Convert values to integers where possible
             for key, value in message_data.items():
                 try:
@@ -403,11 +423,16 @@ class VectorCanChannel():
                     # If conversion fails, retain the original value
                     pass
 
-            # Now you can use 'pop' since message_data should be a dictionary
-            rawMessageValue = message_data.pop("rawMessageValue", None)
-            msgTimeStamp = message_data.pop("msgTimeStamp", None)
-            receivedFromChannelName = message_data.pop("receivedFromChannelName", None)
-            msgID = message_data.pop("msgID", None)
+
+            if __debugData:
+                rawMessageValue = __debugData["rawMessageValue"]
+                msgTimeStamp = __debugData["msgTimeStamp"]
+                receivedFromChannelName = __debugData["receivedFromChannelName"]
+                msgID = __debugData["msgID"]
+            
+            elif messageID == None:
+                raise KeyError("No debug nor message id is passed!")
+
             if isinstance(msgID, str):
                 # If msgID ends with 'x', it's already in hexadecimal format and should be converted to an integer
                 if msgID.lower().endswith('x'):
@@ -426,7 +451,7 @@ class VectorCanChannel():
             return self.parseMsg(new_can_message)
         except:
             print(traceback.print_exc())
-            return {}
+            return traceback.format_exc()
 
 
     # def get_messages(self):

@@ -20,7 +20,21 @@ globalVarQueue = Queue()
 
 pollingNodes = []
 
-async def setRunningNode(id, value=None):
+async def setRunningNode(id: int, value=None) -> int:
+    """_summary_
+
+    Args:
+        id (int): _description_
+        value (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        int: _description_
+    """    """_summary_
+
+    Args:
+        id (int): _description_
+        value (_type_, optional): _description_. Defaults to None.
+    """    
     current_time = datetime.now()
     delta = None
     if id in runningNodes and 'timestamp' in runningNodes:

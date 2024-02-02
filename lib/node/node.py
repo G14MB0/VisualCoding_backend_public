@@ -422,6 +422,7 @@ class OnMessageNode(Node):
         try:
             self.propagatedSignal = getattr(gv, propagatedSignal, "")
         except:
+            print(traceback.print_exc())
             self.propagatedSignal = ""
 
     async def execute(self, graph, data=None, caller=None):
@@ -430,7 +431,7 @@ class OnMessageNode(Node):
             try:
                 await asyncio.sleep(0.0001)
                 item = self.propagatedSignal.get_nowait()
-                self.output = item
+                self.output = item.copy()
                 successors = list(graph.successors(self.id))
                 await gv.setStoppingNode(self.id, self.output)
                 for successor in successors:
@@ -457,10 +458,10 @@ class SendMessageNode(Node):
         try:
             await gv.setRunningNode(self.id, self.output)
             newMessage = self.channelToSend.sendMessage(data)
-            self.output = newMessage
+            self.output = newMessage.copy()
             await gv.setStoppingNode(self.id, self.output)
             for successor in list(graph.successors(self.id)):
-                    task = asyncio.create_task(execute_successors(graph, successor, data=newMessage, predecessor=self.id))
+                    task = asyncio.create_task(execute_successors(graph, successor, data=self.output, predecessor=self.id))
                     tasks.append(task)
         except:
             print(traceback.print_exc())
