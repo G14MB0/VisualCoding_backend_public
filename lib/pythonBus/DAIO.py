@@ -52,6 +52,7 @@ class DAIOChannel():
 
         self.txtWriter = txtWriter
         self.logging = False
+        self.logFileName = ""
 
         # self.hwIndex = hwIndex
         # self.frequency = frequency
@@ -134,9 +135,9 @@ class DAIOChannel():
             # Define the path for the text file
             current_datetime = datetime.now()
             formatted_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
-            logFileName = formatted_datetime + "_" + str("DAIO") + ".txt"
+            # logFileName = formatted_datetime + "_" + str("DAIO") + ".txt"
             logFilePath = os.path.join(log_folder, logFileName)
-            logFileName = formatted_datetime + "_" + str("DAIO") + "_" + str(self.file_index) + ".txt"
+            logFileName = formatted_datetime + "_" + self.logFileName  + "_" + str("DAIO") + "_" + str(self.file_index) + ".txt"
 
         while self.logging:
             try:
@@ -144,7 +145,7 @@ class DAIOChannel():
                     self.writer.on_message_received(msg)
                     if self.writer.file_size() > self.maxSize:
                         self.file_index += 1
-                        logFileName = self.logFileName_base + "_" + str(self.file_index) + ".blf"
+                        logFileName = self.logFileName_base + "_" + self.logFileName  + "_" + str(self.file_index) + ".blf"
                         self.writer.stop()
                         self.writer = can.BLFWriter(os.path.join(log_folder, logFileName), channel=self.channelNum, append=False)
                     
@@ -155,7 +156,7 @@ class DAIOChannel():
                             # Create a new file with updated timestamp
                             current_datetime = datetime.now()
                             formatted_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
-                            logFileName = formatted_datetime + "_" + str("DAIO") + "_" + str(self.file_index) + ".txt"
+                            logFileName = formatted_datetime + "_" + self.logFileName  + "_" + str("DAIO") + "_" + str(self.file_index) + ".txt"
                             logFilePath = os.path.join(log_folder, logFileName)
 
                         # Open the text file in append mode and write the lastValue
@@ -171,12 +172,12 @@ class DAIOChannel():
 
 
     def startLog(self):
-
+        self.logFileName = local_config.readLocalConfig().get("LOG_FILE_NAME", "")
         # Start reading CAN messages in a separate thread
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
         self.logFileName_base = formatted_datetime + "_" + str("DAIO")
-        logFileName = self.logFileName_base + "_" + str(self.file_index) + ".blf"
+        logFileName = self.logFileName_base + "_" + self.logFileName + "_" + str(self.file_index) + ".blf"
 
         self.writer = can.BLFWriter(os.path.join(log_folder, logFileName), channel=self.channelNum, append=False)
         self.logging = True

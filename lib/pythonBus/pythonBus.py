@@ -2,6 +2,7 @@ import can
 import can.interfaces.vector as vt
 import threading
 from datetime import datetime
+from can.message import Message
 import cantools
 
 from queue import Queue, Empty
@@ -115,6 +116,8 @@ class VectorCanChannel():
         self.bitrate = userChannelConfig["bitrate"]
         
         self.logging = False
+        self.log_folder = log_folder
+        self.logFileName = ""
         self.txtLog = txtLog
         
         self.listener = can.BufferedReader()
@@ -131,7 +134,8 @@ class VectorCanChannel():
         else:
             self.maxSize = maxLogSize
 
-        self.messages = Queue()  # Dictionary to store received messages
+        # self.messages = Queue()  # Dictionary to store received messages
+        self.messages = {}  # Dictionary to store received messages
         self.queue_lock = threading.Lock()
         # self.newMessageFlag = True
 
@@ -267,10 +271,11 @@ class VectorCanChannel():
                         if self.decode:
                             msgDecoded = self.parseMsg(msg)
                             if self.traceLog: 
-                                with self.queue_lock:
-                                    if self.messages.qsize() > 4:
-                                        self.messages = Queue()
-                                    self.messages.put({msg.arbitration_id: msgDecoded})
+                                self.messages[msg.arbitration_id]=msgDecoded
+                                # with self.queue_lock:
+                                #     if self.messages.qsize() > 4:
+                                #         self.messages = Queue()
+                                #     self.messages.put({msg.arbitration_id: msgDecoded})
                             #now propagate the value of a signal if is required by self.propagate list
                             for message in self.propagateLocalQueues.keys():
                                 # Pass through all keys and check if the current msg.ID is equals to the msg.ID of the propagation keys
@@ -284,6 +289,20 @@ class VectorCanChannel():
                                             # self.propagate[message].put(msgDecoded[message.split(".")[1]])
                                             self.propagateLocalQueues[message].put(msgDecoded)
                                             self.propagate[message].put(msgDecoded)
+                                        else:
+                                            # Empty the propagateLocalQueues[message] queue
+                                            while not self.propagateLocalQueues[message].empty():
+                                                try:
+                                                    self.propagateLocalQueues[message].get_nowait()
+                                                except Empty:
+                                                    break  # The queue is empty
+
+                                            # Empty the propagate[message] queue
+                                            while not self.propagate[message].empty():
+                                                try:
+                                                    self.propagate[message].get_nowait()
+                                                except Empty:
+                                                    break  # The queue is empty
                                         # self.lastValue_dict[message] = msgDecoded[message.split(".")[1]]
                                         self.lastValue_dict[message] = msgDecoded
                                     # except KeyError:
@@ -292,9 +311,9 @@ class VectorCanChannel():
                                         print(traceback.print_exc())
                                         
                         else:
-                            if self.traceLog: self.messages.put({msg.arbitration_id : ''.join(hex(byte)[2:].zfill(2) for byte in msg.data)})
+                            if self.traceLog: self.messages[msg.arbitration_id]=msgDecoded#self.messages.put({msg.arbitration_id : ''.join(hex(byte)[2:].zfill(2) for byte in msg.data)})
                     else:
-                        if self.traceLog: self.messages.put({msg.arbitration_id : ''.join(hex(byte)[2:].zfill(2) for byte in msg.data)})
+                        if self.traceLog: self.messages[msg.arbitration_id]=msgDecoded#self.messages.put({msg.arbitration_id : ''.join(hex(byte)[2:].zfill(2) for byte in msg.data)})
 
                     # Standard CAN frame sizes in bits
                     arbitration_id_size = 11 if not msg.is_extended_id else 29  # Standard ID: 11 bits, Extended ID: 29 bits
@@ -336,7 +355,7 @@ class VectorCanChannel():
         if self.txtLog:
             current_datetime = datetime.now()
             formatted_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
-            logFileName = formatted_datetime + "_" + str(self.channelName) + "_" + str(self.file_index) + ".txt"
+            logFileName = formatted_datetime + "_" + self.logFileName + "_"  + str(self.channelName) + "_" + str(self.file_index) + ".txt"
         while self.logging:
 
             if self.logging == False:
@@ -347,13 +366,13 @@ class VectorCanChannel():
                     self.writer.on_message_received(msg)
                     if self.writer.file_size() > self.maxSize:
                         self.file_index += 1
-                        logFileName = self.logFileName_base + "_" + str(self.file_index) + ".blf"
+                        logFileName = self.logFileName_base + "_" + self.logFileName + "_" + str(self.file_index) + ".blf"
                         self.writer.stop()
-                        self.writer = can.BLFWriter(os.path.join(log_folder, logFileName), channel=self.channelNum, append=False)
+                        self.writer = can.BLFWriter(os.path.join(self.log_folder, logFileName), channel=self.channelNum, append=False)
                     
                     if self.txtLog:
                         # Open the text file in append mode and write the lastValue
-                        with open(os.path.join(log_folder, logFileName), 'a') as file:
+                        with open(os.path.join(self.log_folder, logFileName), 'a') as file:
                             file.write(str(self.parseMsg(msg)) + "\n")
 
                 
@@ -366,12 +385,13 @@ class VectorCanChannel():
 
 
     def startLog(self):
+        self.logFileName = local_config.readLocalConfig().get("LOG_FILE_NAME", "")
         # Start reading CAN messages in a separate thread
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
         self.logFileName_base = formatted_datetime + "_" + str(self.channelName) 
-        logFileName = self.logFileName_base + "_" + str(self.file_index) + ".blf"
-        self.writer = can.BLFWriter(os.path.join(log_folder, logFileName), channel=self.channelNum, append=False)
+        logFileName = self.logFileName_base + "_" + self.logFileName + "_" + str(self.file_index) + ".blf"
+        self.writer = can.BLFWriter(os.path.join(self.log_folder, logFileName), channel=self.channelNum, append=False)
 
         self.logging = True
         can_thread = threading.Thread(target=self._logger)
@@ -425,9 +445,9 @@ class VectorCanChannel():
 
 
             if __debugData:
-                rawMessageValue = __debugData["rawMessageValue"]
-                msgTimeStamp = __debugData["msgTimeStamp"]
-                receivedFromChannelName = __debugData["receivedFromChannelName"]
+                rawMessageValue = __debugData.get("rawMessageValue", None)
+                msgTimeStamp = __debugData.get("msgTimeStamp", None)
+                receivedFromChannelName = __debugData.get("receivedFromChannelName", None)
                 msgID = __debugData["msgID"]
             
             elif messageID == None:
@@ -452,6 +472,42 @@ class VectorCanChannel():
         except:
             print(traceback.print_exc())
             return traceback.format_exc()
+        
+
+
+from typing import List
+## this class extend the base Listener class to create a message forwarder
+# class MessageForwarder(can.Listener):
+#     def __init__(self, target_bus_obj, exclude_ids: List[int]):
+#         self.target_bus_obj = target_bus_obj
+#         self.exclude_ids = exclude_ids
+#         print(f"initialized a MessageForwarder to {target_bus_obj.channelName} excluding ids: {exclude_ids}")
+
+#     def on_message_received(self, msg: can.Message):
+#         if msg.arbitration_id not in self.exclude_ids:
+#             print(f"forwarding to {self.target_bus_obj.channelName}: {msg.data}")
+#             self.target_bus_obj.send_message(msg)
+
+#     def modify_exclude_ids(self, exclude_ids: List[int]):
+#         self.exclude_ids = exclude_ids
+
+
+
+class FilteredRedirectReader(can.RedirectReader):
+    def __init__(self, targetBus, exclude_ids: List[int]):
+        self.exclude_ids = exclude_ids
+        self.target_bus_obj = targetBus
+        print(f"excluded ids: {exclude_ids}")
+
+    def on_message_received(self, msg: Message) -> None:
+        arbitration_id_int = int(msg.arbitration_id, 16) if isinstance(msg.arbitration_id, str) and msg.arbitration_id.startswith('0x') else msg.arbitration_id
+        print(self.exclude_ids, msg.arbitration_id, arbitration_id_int)
+        if arbitration_id_int not in self.exclude_ids:
+            print(f"send: {msg}")
+            self.target_bus_obj.send(msg)
+    
+    def modify_exclude_ids(self, exclude_ids: List[int]):
+        self.exclude_ids = exclude_ids
 
 
     # def get_messages(self):

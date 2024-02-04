@@ -21,52 +21,89 @@ def updateNodesAndEdges(data):
     # Add nodes
     for node in data["nodes"]:
         if node["type"] == 'TimerNode' and 'timerInterval' in node["data"]: # or node["type"] == 'trigger':
-            print("Add Timer Node")
-            if 'loop' in node["data"]:
-                temp = N.TimerNode(node['id'], node["data"]['timerInterval'], node["data"]['selected'], node["data"]['loop'])
-            else:
-                temp = N.TimerNode(node['id'], node["data"]['timerInterval'], node["data"]['selected'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif (node["type"] == 'FunctionNode' and 'code' in node["data"]) or (node.get('data', {}).get('type') == 'FunctionNode' and 'code' in node["data"]):
-            print("Add Function Node")
-            temp = N.FunctionNode(node['id'], node["data"]['code'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-            if node.get('data', {}).get('isPolling') == 'true':
-                print("Add Polling Node")
-                gv.pollingNodes.append(N.PollingNode(node['id'], node['data']['replacementKey']))
-        elif node["type"] == 'ComparatorNode' and 'code' in node["data"]:
-            print("Add Comparator Node")
-            temp = N.ComparatorNode(node['id'], node["data"]['code'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'DebugNode':
-            print("Add Debug Node")
-            temp  = N.DebugNode(node['id'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':
-            print("Add Muxer Node")
-            temp  = N.MuxerNode(node['id'], node['data']['operation'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'EqualsNode':
-            print("Add Equals Node")
-            temp  = N.EqualsNode(node['id'], node['data']['logic'])
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'OnMessageNode':
-            print("Add onMessageNode Node")
-            temp  = N.OnMessageNode(node['id'], node['data'].get('propagatedSignal', None))
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'SendMessageNode':
-            print("Add sendMessage Node")
-            temp  = N.SendMessageNode(node['id'], node['data'].get('channelToSend', None))
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        else:
-            print(f"adding a node without object: {node['type']}")
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
-
-
+        elif (node["type"] == 'FunctionNode' and 'code' in node["data"]) or (node.get('data', {}).get('type') == 'FunctionNode' and 'code' in node["data"]):
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'ComparatorNode' and 'code' in node["data"]:
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'DebugNode':
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'EqualsNode':
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'OnMessageNode':
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'SendMessageNode':
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        elif node["type"] == 'GatewayNode':
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+        else:
+            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
 
     # Add edges
     for edge in data["edges"]:
         G.add_edge(edge["source"], edge["target"], sourceHandle=edge['sourceHandle'], targetHandle=edge['targetHandle'])
+
+
+
+def finalizeNodesObject():
+    gv.pollingNodes = []
+    # Add nodes
+    for nodeName in G.nodes:
+        node = G.nodes[nodeName]
+        if node["type"] == 'TimerNode' and 'timerInterval' in node["data"]: # or node["type"] == 'trigger':
+            print("Add Timer Node")
+            if 'loop' in node["data"]:
+                temp = N.TimerNode(nodeName, node["data"]['timerInterval'], node["data"]['selected'], node["data"]['loop'])
+            else:
+                temp = N.TimerNode(nodeName, node["data"]['timerInterval'], node["data"]['selected'])
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif (node["type"] == 'FunctionNode' and 'code' in node["data"]) or (node.get('data', {}).get('type') == 'FunctionNode' and 'code' in node["data"]):
+            print("Add Function Node")
+            temp = N.FunctionNode(nodeName, node["data"]['code'])
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+            if node.get('data', {}).get('isPolling') == 'true':
+                print("Add Polling Node")
+                gv.pollingNodes.append(N.PollingNode(nodeName, node['data']['replacementKey']))
+        elif node["type"] == 'ComparatorNode' and 'code' in node["data"]:
+            print("Add Comparator Node")
+            temp = N.ComparatorNode(nodeName, node["data"]['code'])
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'DebugNode':
+            print("Add Debug Node")
+            temp  = N.DebugNode(nodeName)
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':
+            print("Add Muxer Node")
+            temp  = N.MuxerNode(nodeName, node['data']['operation'])
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'EqualsNode':
+            print("Add Equals Node")
+            temp  = N.EqualsNode(nodeName, node['data']['logic'])
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'OnMessageNode':
+            print("Add onMessageNode Node")
+            temp  = N.OnMessageNode(nodeName, node['data'].get('propagatedSignal', None))
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'SendMessageNode':
+            print("Add sendMessage Node")
+            temp  = N.SendMessageNode(nodeName, node['data'].get('channelToSend', None))
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'GatewayNode':
+            print("Add gatewayNode Node")
+            temp  = N.GatewayNode(nodeName, source=node['data'].get('source', None), target=node['data'].get('target', None))
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        else:
+            print(f"adding a node without object: {node['type']}")
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'])
+    return
+
+
+def deleteNodesObjects():
+    for nodeName in G.nodes:
+        node = G.nodes[nodeName]
+        if "obj" in node: del node["obj"]
 
 
 def plotGraph():
@@ -98,7 +135,6 @@ def getNodesAndEdges():
         })
 
     data = {"nodes": nodes, "edges": edges}
-    print(data)
 
     return data
 
@@ -106,6 +142,7 @@ def getNodesAndEdges():
 loop = asyncio.get_event_loop()
 
 def runGraph():
+    finalizeNodesObject()
     for name in utils.canChannel.keys():
         utils.canChannel[name].propagateLog = True
     # Ensure all nodes are set to run
@@ -126,10 +163,12 @@ def stopGraph():
         if 'obj' in G.nodes[node]: 
             print(f"stopping {node}")
             G.nodes[node]['obj'].run = False
+    utils.messageForwardesStop()
     time.sleep(0.5)
     for task in N.tasks:
         if task:
             task.cancel()
     N.tasks = []
+    deleteNodesObjects()
 
 

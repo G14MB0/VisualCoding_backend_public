@@ -3,6 +3,7 @@ from asyncio.exceptions import CancelledError
 import re
 import traceback
 from app.routers.pythonBus import utils as canUtils
+from lib.pythonBus.pythonBus import FilteredRedirectReader
 import queue
 from lib import global_var as gv
 from lib.node import utils
@@ -17,6 +18,7 @@ tasks = []
 async def execute_successors(graph, node_id, data=None, predecessor=None):
     # global tasks
     # print(f"task created on {node_id} with data {data}")
+    # print(".", end="")
     if node_id in graph.nodes:
         if 'obj' in graph.nodes[node_id]:
             node = graph.nodes[node_id]['obj']
@@ -328,7 +330,10 @@ class EqualsNode(Node):
                             if graph.get_edge_data(self.id, successor)['sourceHandle'] == outputNode]
 
         if len(specific_successors) > 0:
-            await execute_successors(graph, specific_successors[0], data=self.output, predecessor=self.id)
+            for successor in specific_successors:
+                await gv.setStoppingNode(self.id, self.output)
+                task = asyncio.create_task(execute_successors(graph, successor, data=self.output, predecessor=self.id))
+                tasks.append(task)
 
 
 class TimerNode(Node):
@@ -365,9 +370,9 @@ class TimerNode(Node):
         counter = 0
         while self.run:
             await gv.setRunningNode(self.id, self.output)
-            print(f"Starting Timer {self.id}")
+            # print(f"Starting Timer {self.id}")
             await self.waitTimer()
-            print(f"Timer {self.id} finished.")
+            # print(f"Timer {self.id} finished.")
 
             counter += 1*self.delay
             self.output = counter
@@ -389,6 +394,15 @@ class TimerNode(Node):
 
 
 class PollingNode(Node):
+    """
+    The PollingNode is a special Class that is executed any time gv.putGlobalValue({name: value}) is called.
+    this can be done by a function node for example!
+    if you call that method, all the node connected to the PollingNode that are called only if the value updated is equals to globalVarToPoll with that value as output.
+    To add a PollinNode simply specify it in the NodeDefiniton.js
+
+    Args:
+        Node (_type_): _description_
+    """    
     def __init__(self, id, globalVar):
         super().__init__(id, "polling")
         self.globalVarToPoll = globalVar
@@ -418,8 +432,9 @@ class PollingNode(Node):
 
 class OnMessageNode(Node):
     def __init__(self, id, propagatedSignal):
-        super().__init__(id, "polling")
+        super().__init__(id, "onmessage")
         try:
+            self.propagatedSignalName = propagatedSignal
             self.propagatedSignal = getattr(gv, propagatedSignal, "")
         except:
             print(traceback.print_exc())
@@ -438,6 +453,7 @@ class OnMessageNode(Node):
                     task = asyncio.create_task(execute_successors(graph, successor, data=item, predecessor=self.id))
                     tasks.append(task)
             except queue.Empty:
+                await asyncio.sleep(0.001)
                 pass  # Queue is empty, check the next one
             except CancelledError:
                 self.run = False
@@ -448,7 +464,7 @@ class OnMessageNode(Node):
 
 class SendMessageNode(Node):
     def __init__(self, id, channelToSend):
-        super().__init__(id, "polling")
+        super().__init__(id, "sendmessage")
         try:
             self.channelToSend = canUtils.canChannel[channelToSend]
         except:
@@ -456,9 +472,9 @@ class SendMessageNode(Node):
 
     async def execute(self, graph, data=None, caller=None):
         try:
-            await gv.setRunningNode(self.id, self.output)
             newMessage = self.channelToSend.sendMessage(data)
             self.output = newMessage.copy()
+            await gv.setRunningNode(self.id, self.output)
             await gv.setStoppingNode(self.id, self.output)
             for successor in list(graph.successors(self.id)):
                     task = asyncio.create_task(execute_successors(graph, successor, data=self.output, predecessor=self.id))
@@ -467,4 +483,53 @@ class SendMessageNode(Node):
             print(traceback.print_exc())
             await gv.setStoppingNode(self.id, self.output)
             
+
+
+class GatewayNode(Node):
+    """This node create a MEssageForwared object to enable gateway from a source and a target bus.
+    Also create a filter to not gateway all those message already handled by "onMessageNode"
+    """    
+    def __init__(self, id, source, target):
+        super().__init__(id, "gateway")
+        try:
+            self.sourceName = source
+            self.targetName = target
+            self.source = canUtils.canChannel[source]
+            self.target = canUtils.canChannel[target]
+        except:
+            self.source = None
+            self.target = None
+
+
+    async def populateExcludedIds(self, graph):
+        temp = []
+        for node in graph.nodes:
+            nodeData = graph.nodes[node]
+            if nodeData["type"] == "OnMessageNode" and nodeData["obj"].propagatedSignalName.split("_")[0] == self.sourceName:
+                temp.append(int(nodeData["obj"].propagatedSignalName.split("_")[1]))
+        return temp
+
+    async def execute(self, graph, data=None, caller=None):
+        try:
+            self.excluded_ids = await self.populateExcludedIds(graph)
+            await gv.setRunningNode(self.id, {"source": self.sourceName, "target": self.targetName, "excluded ids": self.excluded_ids})
+            # while self.run:
+            # forwarder = MessageForwarder(self.target, self.excluded_ids)
+            # notifier = Notifier(self.source.bus, [forwarder])
+            
+            if not getattr(self.source, "redirectReader", None):
+                self.source.redirectReader = FilteredRedirectReader(self.target.bus, self.excluded_ids)
+                self.source.notifier.add_listener(self.source.redirectReader)
+            else:
+                print("listener already present, modifying...")
+                self.source.redirectReader.modify_exclude_ids(self.excluded_ids)
+                # for msg in self.source.bus:
+                #     if msg.arbitration_id not in self.exclude_ids:
+                #         print(f"forwarding to {self.target_bus_obj.channelName}: {msg.data}")
+                #         self.target.send_message(msg)
+                # await asyncio.sleep(0.001)
+            # await gv.setStoppingNode(self.id, self.output)
+        except:
+            print(traceback.print_exc())
+            await gv.setStoppingNode(self.id, self.output)
 

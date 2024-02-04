@@ -120,6 +120,7 @@ async def websocket_endpoint_info(websocket: WebSocket):
 
     timeout = getattr(global_var, "biggerTimerValue", None)
     timeout = timeout + 1 if timeout else timeout
+    await asyncio.sleep(0.5)
     # Accept 
     await websocket.accept()
     try:

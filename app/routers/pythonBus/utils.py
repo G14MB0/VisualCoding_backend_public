@@ -12,6 +12,12 @@ hwChannelPairsWithDetails = []
 DAIOChannel = None
 DAIOChannelDetails = {}
 
+GlobalMessageForwarders = []
+
+def messageForwardesStop():
+    for mf in GlobalMessageForwarders:
+        mf.stop()
+
 def pythonBusStop():
     global canChannel
     for key in canChannel.keys():

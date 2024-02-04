@@ -61,7 +61,7 @@ def getAvailableHardwareCanCompatible():
         temp = pb.getAvailableHw()
         hwList = []
         for key in temp.keys():
-            if key != 100:
+            if key != 100 or True:
                 if key not in hwList:
                     toappend = f"{temp[key][0]['name'].split(' ')[0]} - {key}"
                     hwList.append(toappend)
@@ -70,6 +70,7 @@ def getAvailableHardwareCanCompatible():
     except:
         raise HTTPException(status_code=404, detail="Error getting available hw")
     
+
 
 @router.get("/availableHw/daio")
 def getAvailableHardwareCanCompatible():
@@ -91,6 +92,7 @@ def getAvailableHardwareCanCompatible():
     except Exception as e:
         print(e)
         raise HTTPException(status_code=404, detail="Error getting available DAIO channel")
+
 
 
 
@@ -212,6 +214,48 @@ def getActiveChannel(data: schemas.RemoveChannel):
         print(f"error: {e}")
 
 
+@router.get("/database/{busname}")
+def getDatabaseInfo(busname: str):
+    # Dictionary to store the result
+    result = []
+    # Iterate through all messages in the DBC
+    for message in utils.canChannel[busname].DBC.messages:
+        # Dictionary to store message details
+        result.append(message.name)
+    return result
+
+@router.get("/database/{busname}/{messageName}")
+def getDatabaseInfo(busname: str, messageName: str):
+    # Dictionary to store the result
+    result = {}
+    # Iterate through all messages in the DBC
+    message = utils.canChannel[busname].DBC.get_message_by_name(messageName)
+    # Dictionary to store message details
+    message_dict = {
+        'id': message.frame_id,
+        'signals': {}
+    }
+    # Iterate through all signals in the message
+    for signal in message.signals:
+        # Check if the signal has choices (enumerated values)
+        if signal.choices:
+            possible_values = {value: name for value, name in signal.choices.items()}
+            possible_values["min"] = signal.minimum
+            possible_values["max"] = signal.maximum
+
+        else:
+            # If no enumerated values, use the signal's range
+            possible_values = {
+                'min': signal.minimum,
+                'max': signal.maximum
+            }
+        # Add signal details to the message dictionary
+        message_dict['signals'][signal.name] = possible_values
+    # Add message details to the result dictionary
+    result[message.name] = message_dict
+    return result
+
+
 @router.post("/daio/start")
 def startDAIO(data: schemas.DAIOstart):
     index = pb.getAvailableHw()[data.serial_number][0]['hw_index']
@@ -330,8 +374,11 @@ async def websocket_endpoint(websocket: WebSocket):
             messageDict = {} # Array to collect messages
             for name in utils.canChannel.keys():
                 try:
-                    item = utils.canChannel[name].messages.get_nowait()
-                    messageDict[name] = [item]
+                    messageDict[name] = []
+                    for id in utils.canChannel[name].messages.keys():
+                        messageDict[name].append({id: utils.canChannel[name].messages[id]})
+                    # item = utils.canChannel[name].messages.get_nowait()
+                    # messageDict[name] = [item]
                 except queue.Empty:
                     continue  # Queue is empty, check the next one
                 
