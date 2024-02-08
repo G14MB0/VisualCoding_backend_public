@@ -26,7 +26,6 @@ uvicorn app.main:app --reload #start the server without the main.py file
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import nodes, funcitons, tkinter, setting
-from app.routers.pythonBus import pythonBus, utils
 
 from app import models
 from app.database import engine
@@ -74,7 +73,7 @@ class DualOutput:
         return False
 
 # Creare una nuova istanza DualOutput per gestire l'output
-# output_manager = DualOutput('D:\\ready2test\\log\\Ready2tesT_IOD\\live_output')
+output_manager = DualOutput('D:\\ready2test\\log\\Ready2tesT_IOD\\live_output')
 # sys.stdout = output_manager
 
 
@@ -141,7 +140,6 @@ app.add_middleware(
 
 app.include_router(nodes.router)
 app.include_router(funcitons.router)
-app.include_router(pythonBus.router)
 app.include_router(tkinter.router)
 app.include_router(setting.router)
 

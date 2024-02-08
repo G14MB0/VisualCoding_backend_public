@@ -48,12 +48,21 @@ async def run_folder_dialog() -> str:
     return q.get()
     
 
-def tk_save_as():
-    # Define the file types the dialog should allow (e.g., text files)
-    file_types = [('r2f', '*.r2f'), ('All Files', '*.*')]
-    # Open the "Save As" dialog and ask for the file name and location to save
-    root = Tk()
-    root.withdraw()   
-    root.wm_attributes('-topmost',1)
-    file_path = filedialog.asksaveasfilename(defaultextension=".r2f", filetypes=file_types)
-    return file_path
+def thread_safe_save_as_dialog(q, file_types):
+    try:
+        root = Tk()
+        root.withdraw()  # Hide the Tkinter root window
+        root.attributes("-topmost", True)  # Ensure the dialog is on top of other windows
+        file_path = filedialog.asksaveasfilename(defaultextension=file_types[0][1], filetypes=file_types)
+        root.destroy()
+    except Exception as e:
+        print(e)  # Optionally print the exception to stderr or handle it
+        file_path = ""
+    q.put(file_path)  # Use the queue to return the file path
+
+async def run_save_as_dialog(file_types=[('All Files', '*.*')]) -> str:
+    q = Queue()
+    dialog_thread = threading.Thread(target=thread_safe_save_as_dialog, args=(q, file_types), daemon=True)
+    dialog_thread.start()
+    dialog_thread.join()  # Wait for the thread to finish
+    return q.get()  # Retrieve the file path from the queue

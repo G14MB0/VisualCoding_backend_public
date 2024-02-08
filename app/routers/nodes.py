@@ -59,7 +59,7 @@ async def save_graph(data: schemas.Save):
 
     filePath = ""
     if data.filePath == "":
-        filePath = tk_save_as()
+        filePath = await run_save_as_dialog()
     else:
         filePath = clean_file_path(data.filePath)
     

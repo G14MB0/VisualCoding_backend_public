@@ -5,7 +5,6 @@ import asyncio
 from lib import global_var as gv
 import time
 from lib.node import node as N
-from app.routers.pythonBus import utils
 
 # Create a NetworkX graph
 G = nx.DiGraph()
@@ -31,12 +30,6 @@ def updateNodesAndEdges(data):
         elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
         elif node["type"] == 'EqualsNode':
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
-        elif node["type"] == 'OnMessageNode':
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
-        elif node["type"] == 'SendMessageNode':
-            G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
-        elif node["type"] == 'GatewayNode':
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
         else:
             G.add_node(node["id"], type=node["type"], data=node["data"], position=node['position'], style=node['style'])
@@ -77,22 +70,6 @@ def finalizeNodesObject():
         elif node["type"] == 'SumNode' or node["type"] == 'MultiplyNode' or node["type"] == 'SubtractNode' or node["type"] == 'DivideNode':
             print("Add Muxer Node")
             temp  = N.MuxerNode(nodeName, node['data']['operation'])
-            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'EqualsNode':
-            print("Add Equals Node")
-            temp  = N.EqualsNode(nodeName, node['data']['logic'])
-            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'OnMessageNode':
-            print("Add onMessageNode Node")
-            temp  = N.OnMessageNode(nodeName, node['data'].get('propagatedSignal', None))
-            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'SendMessageNode':
-            print("Add sendMessage Node")
-            temp  = N.SendMessageNode(nodeName, node['data'].get('channelToSend', None))
-            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
-        elif node["type"] == 'GatewayNode':
-            print("Add gatewayNode Node")
-            temp  = N.GatewayNode(nodeName, source=node['data'].get('source', None), target=node['data'].get('target', None))
             G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
             print(f"adding a node without object: {node['type']}")
@@ -143,8 +120,6 @@ loop = asyncio.get_event_loop()
 
 def runGraph():
     finalizeNodesObject()
-    for name in utils.canChannel.keys():
-        utils.canChannel[name].propagateLog = True
     # Ensure all nodes are set to run
     for node in G.nodes:
         if 'obj' in G.nodes[node]:
@@ -157,13 +132,10 @@ def runGraph():
 
 
 def stopGraph():
-    for name in utils.canChannel.keys():
-            utils.canChannel[name].propagateLog = False
     for node in G.nodes:
         if 'obj' in G.nodes[node]: 
             print(f"stopping {node}")
             G.nodes[node]['obj'].run = False
-    utils.messageForwardesStop()
     time.sleep(0.5)
     for task in N.tasks:
         if task:

@@ -48,6 +48,7 @@ async def setRunningNode(id: int, value=None) -> int:
     runningNodes[id] = {"isRunning": "running", "value": data, "timestamp": datetime.now().isoformat()}
     await notificationQueue.put(runningNodes)
 
+
 async def setStoppingNode(id, value=None):
     current_time = datetime.now()
     delta = None
@@ -61,6 +62,7 @@ async def setStoppingNode(id, value=None):
     }
     runningNodes[id] = {"isRunning": "not running", "value": data}
     await notificationQueue.put(runningNodes)
+
 
 
 async def putGlobalValue(value):

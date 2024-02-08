@@ -6,7 +6,6 @@ from fastapi import APIRouter
 from lib.tkinter.methods import *
 import os
 import subprocess
-from lib.pythonBus.pythonBus import log_folder
 from lib.local_config import config_folder_path
 
 
@@ -62,8 +61,8 @@ def openFolder(folder):
     
     elif folder == "log":
         # Check if the path is a valid directory
-        if os.path.isdir(log_folder):
+        if os.path.isdir(""):
             # Open the folder using the default file explorer
-            subprocess.Popen(f'explorer "{log_folder}"')
+            subprocess.Popen(f'explorer "{""}"')
         else:
             return "The folder does not exist."
