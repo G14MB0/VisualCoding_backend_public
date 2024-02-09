@@ -4,12 +4,12 @@ from pathlib import Path
 # Get the user's home directory (equivalent to %USERPROFILE% in Windows)
 user_profile = Path.home()
 # Define the new folder name
-new_folder_name = 'Ready2tesT'
+new_folder_name = 'VisualCoding'
 # Create the full path for the new folder
 config_folder_path = user_profile / new_folder_name
 
 # Define the file name
-file_name = 'Ready2floW.txt'
+file_name = 'visualcoding.txt'
 config_file_path = config_folder_path / file_name
 
 # Check if the folder exists, and create it if it doesn't
@@ -20,11 +20,7 @@ if not config_folder_path.exists():
 
 # default configuration 
 template = '''
-CHART_SAMPLE_UPDATE = 1
-VOLTAGE = g_q_Voltage
-MAX_LOG_SIZE = 104857600
-VOLTAGE_MSG_ID = 999
-LOG_FILE_NAME = log
+EXAMPLE = example
 '''
 
 

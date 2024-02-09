@@ -61,8 +61,8 @@ def openFolder(folder):
     
     elif folder == "log":
         # Check if the path is a valid directory
-        if os.path.isdir(""):
+        if os.path.isdir("C:\\VisualCoding"):
             # Open the folder using the default file explorer
-            subprocess.Popen(f'explorer "{""}"')
+            subprocess.Popen(f'explorer C:\\VisualCoding')
         else:
             return "The folder does not exist."

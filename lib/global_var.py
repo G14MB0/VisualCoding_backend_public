@@ -3,10 +3,6 @@ from lib.node.node import PollingNode
 from datetime import datetime
 from lib import local_config
 
-g_wakeupCounter = 0
-g_inSleep = 0
-g_busLoad = 0
- 
 
 local_config.readLocalConfig()
 

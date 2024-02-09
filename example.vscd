@@ -1,0 +1,684 @@
+{
+    "graphSchema": {
+        "nodes": [
+            {
+                "id": "node_8",
+                "type": "TimerNode",
+                "data": {
+                    "label": "TimerNode node",
+                    "id": "node_8",
+                    "style": {
+                        "backgroundColor": "#b5e2fa",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "selected": "s",
+                    "loop": true,
+                    "timerInterval": "1",
+                    "value": {
+                        "value": 10,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 215,
+                    "y": 525
+                },
+                "style": {
+                    "backgroundColor": "#b5e2fa",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_9",
+                "type": "FunctionNode",
+                "data": {
+                    "label": "FunctionNode node",
+                    "id": "node_9",
+                    "style": {
+                        "backgroundColor": "#eddea4",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "code": "def isOddOrEven(data=None):\n\treturn data%2",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 667.9953013305922,
+                    "y": 453.6601712857415
+                },
+                "style": {
+                    "backgroundColor": "#eddea4",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_12",
+                "type": "GlobalVarNode",
+                "data": {
+                    "label": "GlobalVarNode node",
+                    "id": "node_12",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "true",
+                    "code": "async def FunctionGlobalVar(data):\n    if data != None:\n        gv.globalVarDict[\"oddOrEven\"] = data\n        await gv.putGlobalValue({\"oddOrEven\": data})\n        return data\n    else:\n        return gv.globalVarDict[\"oddOrEven\"]",
+                    "replacementKey": "oddOrEven",
+                    "value": {
+                        "value": 1,
+                        "timestamp": "2024-02-09T17:26:42.307338",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 265,
+                    "y": 185
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_17",
+                "type": "GlobalVarNode",
+                "data": {
+                    "label": "GlobalVarNode node",
+                    "id": "node_17",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "true",
+                    "code": "async def FunctionGlobalVar(data):\n    if data != None:\n        gv.globalVarDict[\"oddOrEven\"] = data\n        await gv.putGlobalValue({\"oddOrEven\": data})\n        return data\n    else:\n        return gv.globalVarDict[\"oddOrEven\"]",
+                    "replacementKey": "oddOrEven",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 1015,
+                    "y": 525
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_18",
+                "type": "EqualsNode",
+                "data": {
+                    "label": "EqualsNode node",
+                    "id": "node_18",
+                    "style": {
+                        "backgroundColor": "#e0e0e0",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "operation": "equals",
+                    "logic": "=",
+                    "value": {
+                        "value": {
+                            "lowerNode": 0,
+                            "upperNode": 0
+                        },
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 665,
+                    "y": 185
+                },
+                "style": {
+                    "backgroundColor": "#e0e0e0",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_19",
+                "type": "VariableNode",
+                "data": {
+                    "label": "VariableNode node",
+                    "id": "node_19",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "false",
+                    "code": "def FunctionVariable(data=None): \n        return 0",
+                    "replacementKey": "0",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:42.307338",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 265,
+                    "y": 355
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_28",
+                "type": "DemuxerNode",
+                "data": {
+                    "label": "DemuxerNode node",
+                    "id": "node_28",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "false",
+                    "code": "def FunctionDemuxer(data=None):\n    print(data)\n    try:\n        if isinstance(data, dict):\n            return data[\"upperNode\"]\n        elif isinstance(data, list) or isinstance(data, tuple):\n            return data[upperNode]\n        else: return -1\n    except:\n        print(traceback.print_exc())",
+                    "replacementKey": "upperNode",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:51.404856",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 993.6601712857416,
+                    "y": 253.6937534367409
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_29",
+                "type": "DemuxerNode",
+                "data": {
+                    "label": "DemuxerNode node",
+                    "id": "node_29",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "false",
+                    "code": "def FunctionDemuxer(data=None):\n    print(data)\n    try:\n        if isinstance(data, dict):\n            return data[\"upperNode\"]\n        elif isinstance(data, list) or isinstance(data, tuple):\n            return data[upperNode]\n        else: return -1\n    except:\n        print(traceback.print_exc())",
+                    "replacementKey": "upperNode",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 918.2437809306684,
+                    "y": 124.45936984488861
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_30",
+                "type": "MultiplyNode",
+                "data": {
+                    "label": "MultiplyNode node",
+                    "id": "node_30",
+                    "style": {
+                        "backgroundColor": "#e0e0e0",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "operation": "multiply",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 1209.462975509398,
+                    "y": 93.25552760418827
+                },
+                "style": {
+                    "backgroundColor": "#e0e0e0",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_31",
+                "type": "SumNode",
+                "data": {
+                    "label": "SumNode node",
+                    "id": "node_31",
+                    "style": {
+                        "backgroundColor": "#e0e0e0",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "operation": "sum",
+                    "value": {
+                        "value": 160,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 764.0986162503845,
+                    "y": 694.5483696243667
+                },
+                "style": {
+                    "backgroundColor": "#e0e0e0",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_32",
+                "type": "VariableNode",
+                "data": {
+                    "label": "VariableNode node",
+                    "id": "node_32",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "false",
+                    "code": "def FunctionVariable(data=None): \n        return 15",
+                    "replacementKey": "15",
+                    "value": {
+                        "value": 15,
+                        "timestamp": "2024-02-09T17:26:42.307338",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 269.8155173015933,
+                    "y": 788.3092873631065
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_33",
+                "type": "MultiplyNode",
+                "data": {
+                    "label": "MultiplyNode node",
+                    "id": "node_33",
+                    "style": {
+                        "backgroundColor": "#e0e0e0",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "operation": "multiply",
+                    "value": {
+                        "value": 150,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 616.3232567708486,
+                    "y": 754.6776538263846
+                },
+                "style": {
+                    "backgroundColor": "#e0e0e0",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_34",
+                "type": "GlobalVarNode",
+                "data": {
+                    "label": "GlobalVarNode node",
+                    "id": "node_34",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "true",
+                    "code": "async def FunctionGlobalVar(data):\n    if data != None:\n        gv.globalVarDict[\"strangeVariable\"] = data\n        await gv.putGlobalValue({\"strangeVariable\": data})\n        return data\n    else:\n        return gv.globalVarDict[\"strangeVariable\"]",
+                    "replacementKey": "strangeVariable",
+                    "value": {
+                        "value": 160,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 908.8165544993084,
+                    "y": 683.3378251121262
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_35",
+                "type": "GlobalVarNode",
+                "data": {
+                    "label": "GlobalVarNode node",
+                    "id": "node_35",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "true",
+                    "code": "async def FunctionGlobalVar(data):\n    if data != None:\n        gv.globalVarDict[\"strangeVariable\"] = data\n        await gv.putGlobalValue({\"strangeVariable\": data})\n        return data\n    else:\n        return gv.globalVarDict[\"strangeVariable\"]",
+                    "replacementKey": "strangeVariable",
+                    "value": {
+                        "value": null,
+                        "timestamp": "2024-02-09T17:26:42.307338",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 927.1610818829749,
+                    "y": -11.71593464679205
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_36",
+                "type": "GlobalVarNode",
+                "data": {
+                    "label": "GlobalVarNode node",
+                    "id": "node_36",
+                    "style": {
+                        "backgroundColor": "#5dc77a",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "type": "FunctionNode",
+                    "isPolling": "true",
+                    "code": "async def FunctionGlobalVar(data):\n    if data != None:\n        gv.globalVarDict[\"strangeVariable\"] = data\n        await gv.putGlobalValue({\"strangeVariable\": data})\n        return data\n    else:\n        return gv.globalVarDict[\"strangeVariable\"]",
+                    "replacementKey": "strangeVariable",
+                    "value": {
+                        "value": null,
+                        "timestamp": "2024-02-09T17:26:42.307338",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 995.4434893666225,
+                    "y": 379.63398287142587
+                },
+                "style": {
+                    "backgroundColor": "#5dc77a",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_37",
+                "type": "MultiplyNode",
+                "data": {
+                    "label": "MultiplyNode node",
+                    "id": "node_37",
+                    "style": {
+                        "backgroundColor": "#e0e0e0",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "operation": "multiply",
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 1272.6496809420266,
+                    "y": 336.83008564287076
+                },
+                "style": {
+                    "backgroundColor": "#e0e0e0",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_38",
+                "type": "DebugNode",
+                "data": {
+                    "label": "DebugNode node",
+                    "id": "node_38",
+                    "style": {
+                        "backgroundColor": "#e9ff70",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 1255.324293968564,
+                    "y": -66.74951679779143
+                },
+                "style": {
+                    "backgroundColor": "#e9ff70",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            },
+            {
+                "id": "node_39",
+                "type": "DebugNode",
+                "data": {
+                    "label": "DebugNode node",
+                    "id": "node_39",
+                    "style": {
+                        "backgroundColor": "#e9ff70",
+                        "borderRadius": "10px",
+                        "transition": "background-color 0.3s"
+                    },
+                    "value": {
+                        "value": 0,
+                        "timestamp": "2024-02-09T17:26:52.411481",
+                        "delta": null
+                    }
+                },
+                "position": {
+                    "x": 1318.510999401193,
+                    "y": 190.07386657353905
+                },
+                "style": {
+                    "backgroundColor": "#e9ff70",
+                    "borderRadius": "10px",
+                    "transition": "box-shadow 0.3s",
+                    "boxShadow": "0px 0px"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "source": "node_8",
+                "target": "node_9",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_8",
+                "target": "node_31",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_8",
+                "target": "node_33",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_9",
+                "target": "node_17",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_12",
+                "target": "node_18",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_18",
+                "target": "node_29",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_18",
+                "target": "node_28",
+                "type": "smoothstep",
+                "sourceHandle": "b",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_19",
+                "target": "node_18",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "b"
+            },
+            {
+                "source": "node_28",
+                "target": "node_37",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_29",
+                "target": "node_30",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "b"
+            },
+            {
+                "source": "node_30",
+                "target": "node_38",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_31",
+                "target": "node_34",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_32",
+                "target": "node_33",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "b"
+            },
+            {
+                "source": "node_33",
+                "target": "node_31",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "b"
+            },
+            {
+                "source": "node_35",
+                "target": "node_30",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            },
+            {
+                "source": "node_36",
+                "target": "node_37",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "b"
+            },
+            {
+                "source": "node_37",
+                "target": "node_39",
+                "type": "smoothstep",
+                "sourceHandle": "a",
+                "targetHandle": "a"
+            }
+        ]
+    },
+    "globalVar": {
+        "oddOrEven": 0.0,
+        "strangeVariable": 160.0
+    }
+}

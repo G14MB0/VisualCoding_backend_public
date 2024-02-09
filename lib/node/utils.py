@@ -71,6 +71,10 @@ def finalizeNodesObject():
             print("Add Muxer Node")
             temp  = N.MuxerNode(nodeName, node['data']['operation'])
             G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
+        elif node["type"] == 'EqualsNode':
+            print("Add Equals Node")
+            temp  = N.EqualsNode(nodeName, node['data']['logic'])
+            G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'], obj=temp)
         else:
             print(f"adding a node without object: {node['type']}")
             G.add_node(nodeName, type=node["type"], data=node["data"], position=node['position'], style=node['style'])

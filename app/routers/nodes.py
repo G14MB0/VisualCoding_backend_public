@@ -8,6 +8,7 @@ import re
 #pydantic things
 from typing import  List #list is used to define a response model that return a list
 import json
+import traceback
 
 router = APIRouter(
     prefix="/nodes",
@@ -57,25 +58,29 @@ def clean_file_path(file_path):
 @router.post("/save/")
 async def save_graph(data: schemas.Save):
 
-    filePath = ""
-    if data.filePath == "":
-        filePath = await run_save_as_dialog()
-    else:
-        filePath = clean_file_path(data.filePath)
-    
-    print(filePath)
-    # Get the nodes and edges data
-    graphSchema = getNodesAndEdges()
-    toSave = {
-        "graphSchema": graphSchema,
-        "globalVar": global_var.globalVarDict
-    }
-    # Convert the data to a JSON string
-    data_str = json.dumps(toSave, indent=4)
-    # Save the JSON string to a file with the .r2f extension
-    with open(filePath, 'w') as file:
-        file.write(data_str)
-    return {'filePath': filePath}
+    try:
+        filePath = ""
+        if data.filePath == "":
+            filePath = await run_save_as_dialog(file_types=[("VisualCoding","vscd")])
+        else:
+            filePath = clean_file_path(data.filePath)
+        
+        print(filePath)
+        # Get the nodes and edges data
+        graphSchema = getNodesAndEdges()
+        toSave = {
+            "graphSchema": graphSchema,
+            "globalVar": global_var.globalVarDict
+        }
+        # Convert the data to a JSON string
+        data_str = json.dumps(toSave, indent=4)
+        # Save the JSON string to a file with the .r2f extension
+        with open(filePath, 'w') as file:
+            file.write(data_str)
+        return {'filePath': filePath}
+    except:
+        print(traceback.print_exc())
+        return {'filePath': ""}
 
 
 

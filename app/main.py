@@ -40,6 +40,7 @@ import threading
 import io
 import os
 import datetime
+import sys
 
 
 # This bind the database with the models (creating the tables if not present and all the stuff)
@@ -73,8 +74,14 @@ class DualOutput:
         return False
 
 # Creare una nuova istanza DualOutput per gestire l'output
-output_manager = DualOutput('D:\\ready2test\\log\\Ready2tesT_IOD\\live_output')
-# sys.stdout = output_manager
+output_manager = DualOutput('C:\\VisualCoding\\log')
+# Check if the application is frozen (built with PyInstaller)
+if getattr(sys, 'frozen', False):
+    # Application is running from a PyInstaller bundle
+    sys.stdout = output_manager
+else:
+    # Application is running in a development environment
+    pass
 
 
 origins = [
@@ -96,7 +103,6 @@ async def lifespan(app: FastAPI):
 
     yield  # This yield separates startup from shutdown code
 
-    utils.pythonBusStop()
     # Code here runs after the app stops
     for node in nodeUtils.G.nodes:
         if 'obj' in nodeUtils.G.nodes[node]: 

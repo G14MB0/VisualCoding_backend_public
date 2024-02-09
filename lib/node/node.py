@@ -99,7 +99,7 @@ class FunctionNode(Node):
                         # Check if the function is a coroutine function
                         if asyncio.iscoroutinefunction(function_ref):
                             # If it is, await it
-                            if data:
+                            if data != None:
                                 self.output = await function_ref(data)
                             else:
                                 sig = inspect.signature(function_ref)
@@ -130,7 +130,10 @@ class FunctionNode(Node):
             # Procedi con l'esecuzione dei nodi successori sequenzialmente
             successors = list(graph.successors(self.id))
             for successor in successors:
-                await execute_successors(graph, successor, data=self.output, predecessor=self.id)  
+                try:
+                    await execute_successors(graph, successor, data=self.output.copy(), predecessor=self.id)  
+                except:
+                    await execute_successors(graph, successor, data=self.output, predecessor=self.id)  
 
             await gv.setStoppingNode(self.id, value=self.output)
             return
@@ -325,11 +328,12 @@ class EqualsNode(Node):
 
         specific_successors = [successor for successor in graph.successors(self.id)
                             if graph.get_edge_data(self.id, successor)['sourceHandle'] == outputNode]
+        
 
         if len(specific_successors) > 0:
             for successor in specific_successors:
                 await gv.setStoppingNode(self.id, self.output)
-                task = asyncio.create_task(execute_successors(graph, successor, data=self.output, predecessor=self.id))
+                task = asyncio.create_task(execute_successors(graph, successor, data=self.output.copy(), predecessor=self.id))
                 tasks.append(task)
 
 
