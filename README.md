@@ -46,7 +46,12 @@ List of the software's nodes features:
 ## Installation
 
 both this and the backend repo must be packaged.
-for a simpler usage process, here the istallation folder: ->
+for a simpler usage process, here the istallation folder: -> <a href="https://firebasestorage.googleapis.com/v0/b/g14mb0.appspot.com/o/VisualCoding.zip?alt=media&token=4f1502bb-4beb-474d-bd13-16175c29dd2c">Download</a>
+
+Limitation:
+- Works only on Windows
+- Low to not tested (it's potentially full of bugs but it can do its main job: present itself)
+- Packaged using windows 11
 
 ### Since I'm using pyinstaller, there's the possibility that the antivisur recognise the .exe made by pyinstaller as a trojan. If so, you need to make an installer by yourself and avoid using my installton folder.
 
