@@ -18,6 +18,8 @@ Thumbs.db  # For Windows
 .vscode/
 mainFiles/
 docs/
+output/
+dist/
 
 # Build artifacts
 build/

@@ -87,14 +87,17 @@ async def save_graph(data: schemas.Save):
 @router.get("/load/")
 async def load_graph():
 
-    file_path = await run_file_dialog("r2f")
-    # Open the file with the .r2f extension
-    with open(file_path, 'r') as file:
-        # Parse the JSON string in the file to a Python dictionary
-        data = json.load(file)
-    updateNodesAndEdges(data['graphSchema'])
-    global_var.globalVarDict = data['globalVar']
-    return {'filePath': file_path}
+    try:
+        file_path = await run_file_dialog("vscd")
+        # Open the file with the .r2f extension
+        with open(file_path, 'r') as file:
+            # Parse the JSON string in the file to a Python dictionary
+            data = json.load(file)
+        updateNodesAndEdges(data['graphSchema'])
+        global_var.globalVarDict = data['globalVar']
+        return {'filePath': file_path}
+    except:
+        return {'filePath': ""}
 
 
 
